@@ -220,3 +220,67 @@ const SENTENCE_PACKS = [
     ],
   },
 ];
+
+// ระดับ 3 — ประโยคที่ยาวขึ้น (Level 3: longer sentences, same format)
+const SENTENCE_PACKS_L3 = [
+  {
+    id: 's3-daily', icon: '🏡', th: 'ชีวิตประจำวัน (ยาว)', en: 'Longer Daily Life',
+    sentences: [
+      { en: 'I wake up at six in the morning', th: 'ฉันตื่นนอนตอนหกโมงเช้า', extra: ['sleep', 'seven', 'night'], thTiles: ['ฉัน', 'ตื่นนอน', 'ตอน', 'หกโมงเช้า'], thExtra: ['นอน', 'เจ็ดโมง'] },
+      { en: 'I drink coffee before I go to work', th: 'ฉันดื่มกาแฟก่อนไปทำงาน', extra: ['after', 'tea', 'sleep'], thTiles: ['ฉัน', 'ดื่ม', 'กาแฟ', 'ก่อน', 'ไป', 'ทำงาน'], thExtra: ['หลังจาก', 'ชา'] },
+      { en: 'My mother cooks dinner for the family', th: 'แม่ทำอาหารเย็นให้ครอบครัว', extra: ['father', 'breakfast', 'buys'], thTiles: ['แม่', 'ทำ', 'อาหารเย็น', 'ให้', 'ครอบครัว'], thExtra: ['พ่อ', 'ข้าวเช้า'] },
+      { en: 'I wash my clothes every weekend', th: 'ฉันซักผ้าทุกสุดสัปดาห์', extra: ['clean', 'day', 'never'], thTiles: ['ฉัน', 'ซักผ้า', 'ทุก', 'สุดสัปดาห์'], thExtra: ['ทำความสะอาด', 'ทุกวัน'] },
+      { en: 'We watch a movie together at night', th: 'เราดูหนังด้วยกันตอนกลางคืน', extra: ['listen', 'alone', 'morning'], thTiles: ['เรา', 'ดู', 'หนัง', 'ด้วยกัน', 'ตอนกลางคืน'], thExtra: ['ฟัง', 'คนเดียว'] },
+      { en: 'I take the bus to work every day', th: 'ฉันนั่งรถเมล์ไปทำงานทุกวัน', extra: ['train', 'walk', 'home'], thTiles: ['ฉัน', 'นั่ง', 'รถเมล์', 'ไป', 'ทำงาน', 'ทุกวัน'], thExtra: ['รถไฟ', 'เดิน'] },
+      { en: 'She reads a book before she sleeps', th: 'เธออ่านหนังสือก่อนนอน', extra: ['writes', 'after', 'eats'], thTiles: ['เธอ', 'อ่าน', 'หนังสือ', 'ก่อน', 'นอน'], thExtra: ['เขียน', 'หลังจาก'] },
+      { en: 'I buy fruit at the market in the morning', th: 'ฉันซื้อผลไม้ที่ตลาดตอนเช้า', extra: ['sell', 'vegetables', 'evening'], thTiles: ['ฉัน', 'ซื้อ', 'ผลไม้', 'ที่', 'ตลาด', 'ตอนเช้า'], thExtra: ['ขาย', 'ผัก'] },
+      { en: 'My father drives to work every morning', th: 'พ่อขับรถไปทำงานทุกเช้า', extra: ['mother', 'walks', 'school'], thTiles: ['พ่อ', 'ขับรถ', 'ไป', 'ทำงาน', 'ทุกเช้า'], thExtra: ['แม่', 'เดิน'] },
+      { en: 'We clean the house together on Sunday', th: 'เราทำความสะอาดบ้านด้วยกันวันอาทิตย์', extra: ['cook', 'alone', 'Monday'], thTiles: ['เรา', 'ทำความสะอาด', 'บ้าน', 'ด้วยกัน', 'วันอาทิตย์'], thExtra: ['ทำอาหาร', 'วันจันทร์'] },
+    ],
+  },
+  {
+    id: 's3-out', icon: '🏙️', th: 'ไปข้างนอก', en: 'Out & About',
+    sentences: [
+      { en: 'Where can I buy cold water', th: 'ฉันซื้อน้ำเย็นได้ที่ไหน', extra: ['sell', 'hot', 'when'], thTiles: ['ฉัน', 'ซื้อ', 'น้ำเย็น', 'ได้', 'ที่ไหน'], thExtra: ['ขาย', 'น้ำร้อน'] },
+      { en: 'The restaurant near my house is very good', th: 'ร้านอาหารใกล้บ้านฉันอร่อยมาก', extra: ['far', 'hotel', 'bad'], thTiles: ['ร้านอาหาร', 'ใกล้', 'บ้านฉัน', 'อร่อย', 'มาก'], thExtra: ['ไกล', 'โรงแรม'] },
+      { en: 'I want to travel to the mountains', th: 'ฉันอยากไปเที่ยวภูเขา', extra: ['beach', 'come', 'work'], thTiles: ['ฉัน', 'อยาก', 'ไป', 'เที่ยว', 'ภูเขา'], thExtra: ['ทะเล', 'ทำงาน'] },
+      { en: 'Can you tell me where the bank is', th: 'บอกฉันหน่อยธนาคารอยู่ที่ไหน', extra: ['ask', 'market', 'when'], thTiles: ['บอก', 'ฉัน', 'หน่อย', 'ธนาคาร', 'อยู่', 'ที่ไหน'], thExtra: ['ถาม', 'ตลาด'] },
+      { en: 'The tuk-tuk driver is very friendly', th: 'คนขับตุ๊กตุ๊กใจดีมาก', extra: ['taxi', 'angry', 'slow'], thTiles: ['คนขับ', 'ตุ๊กตุ๊ก', 'ใจดี', 'มาก'], thExtra: ['แท็กซี่', 'โกรธ'] },
+      { en: 'We swim in the sea every summer', th: 'เราว่ายน้ำในทะเลทุกฤดูร้อน', extra: ['river', 'winter', 'run'], thTiles: ['เรา', 'ว่ายน้ำ', 'ใน', 'ทะเล', 'ทุก', 'ฤดูร้อน'], thExtra: ['แม่น้ำ', 'ฤดูหนาว'] },
+      { en: 'The market opens early in the morning', th: 'ตลาดเปิดแต่เช้า', extra: ['closes', 'late', 'shop'], thTiles: ['ตลาด', 'เปิด', 'แต่เช้า'], thExtra: ['ปิด', 'สาย'] },
+      { en: 'I like to walk in the park with you', th: 'ฉันชอบเดินเล่นในสวนกับคุณ', extra: ['run', 'beach', 'alone'], thTiles: ['ฉัน', 'ชอบ', 'เดินเล่น', 'ใน', 'สวน', 'กับคุณ'], thExtra: ['วิ่ง', 'คนเดียว'] },
+      { en: 'This hotel has a beautiful view', th: 'โรงแรมนี้วิวสวย', extra: ['ugly', 'house', 'food'], thTiles: ['โรงแรม', 'นี้', 'วิว', 'สวย'], thExtra: ['อาหาร', 'ไม่สวย'] },
+      { en: 'How long does it take to the airport', th: 'ไปสนามบินใช้เวลานานไหม', extra: ['station', 'short', 'why'], thTiles: ['ไป', 'สนามบิน', 'ใช้เวลา', 'นาน', 'ไหม'], thExtra: ['สถานี', 'ใกล้'] },
+    ],
+  },
+  {
+    id: 's3-talk', icon: '💬', th: 'คุยกัน', en: 'Conversations',
+    sentences: [
+      { en: 'What do you want to eat today', th: 'วันนี้คุณอยากกินอะไร', extra: ['drink', 'tomorrow', 'where'], thTiles: ['วันนี้', 'คุณ', 'อยาก', 'กิน', 'อะไร'], thExtra: ['ดื่ม', 'พรุ่งนี้'] },
+      { en: 'I think this song is very beautiful', th: 'ฉันคิดว่าเพลงนี้เพราะมาก', extra: ['know', 'movie', 'bad'], thTiles: ['ฉัน', 'คิดว่า', 'เพลงนี้', 'เพราะ', 'มาก'], thExtra: ['รู้ว่า', 'หนัง'] },
+      { en: 'Can you speak more slowly please', th: 'พูดช้าลงหน่อยได้ไหม', extra: ['fast', 'listen', 'loud'], thTiles: ['พูด', 'ช้าลง', 'หน่อย', 'ได้ไหม'], thExtra: ['เร็วขึ้น', 'ฟัง'] },
+      { en: "I don't know how to say this word", th: 'ฉันไม่รู้ว่าคำนี้พูดยังไง', extra: ['think', 'sentence', 'write'], thTiles: ['ฉัน', 'ไม่รู้ว่า', 'คำนี้', 'พูด', 'ยังไง'], thExtra: ['คิดว่า', 'เขียน'] },
+      { en: 'Please teach me a new English word', th: 'ช่วยสอนคำอังกฤษใหม่ให้ฉันหน่อย', extra: ['learn', 'old', 'Thai'], thTiles: ['ช่วย', 'สอน', 'คำอังกฤษ', 'ใหม่', 'ให้ฉัน', 'หน่อย'], thExtra: ['เรียน', 'เก่า'] },
+      { en: 'What are you doing now', th: 'ตอนนี้คุณทำอะไรอยู่', extra: ['yesterday', 'who', 'want'], thTiles: ['ตอนนี้', 'คุณ', 'ทำ', 'อะไร', 'อยู่'], thExtra: ['เมื่อวาน', 'ใคร'] },
+      { en: 'I will call you tomorrow morning', th: 'ฉันจะโทรหาคุณพรุ่งนี้เช้า', extra: ['tonight', 'meet', 'he'], thTiles: ['ฉัน', 'จะ', 'โทรหา', 'คุณ', 'พรุ่งนี้เช้า'], thExtra: ['คืนนี้', 'เจอ'] },
+      { en: 'Do you understand what I said', th: 'คุณเข้าใจที่ฉันพูดไหม', extra: ['know', 'write', 'he'], thTiles: ['คุณ', 'เข้าใจ', 'ที่ฉันพูด', 'ไหม'], thExtra: ['รู้', 'เขียน'] },
+      { en: 'I am learning English with my boyfriend', th: 'ฉันเรียนภาษาอังกฤษกับแฟน', extra: ['teach', 'Thai', 'friend'], thTiles: ['ฉัน', 'เรียน', 'ภาษาอังกฤษ', 'กับ', 'แฟน'], thExtra: ['สอน', 'ภาษาไทย'] },
+      { en: 'Speak English with me every day please', th: 'พูดภาษาอังกฤษกับฉันทุกวันนะ', extra: ['Thai', 'listen', 'week'], thTiles: ['พูด', 'ภาษาอังกฤษ', 'กับฉัน', 'ทุกวัน', 'นะ'], thExtra: ['ภาษาไทย', 'ฟัง'] },
+    ],
+  },
+  {
+    id: 's3-love', icon: '💖', th: 'หวานๆ (ยาว)', en: 'More Sweet Talk',
+    sentences: [
+      { en: 'I want to be with you every day', th: 'ฉันอยากอยู่กับคุณทุกวัน', extra: ['see', 'week', 'go'], thTiles: ['ฉัน', 'อยาก', 'อยู่', 'กับคุณ', 'ทุกวัน'], thExtra: ['เจอ', 'ทุกสัปดาห์'] },
+      { en: 'You are the most beautiful woman in the world', th: 'คุณคือผู้หญิงที่สวยที่สุดในโลก', extra: ['man', 'city', 'smart'], thTiles: ['คุณ', 'คือ', 'ผู้หญิง', 'ที่สวยที่สุด', 'ในโลก'], thExtra: ['ผู้ชาย', 'ในเมือง'] },
+      { en: 'I am happy when I am with you', th: 'ฉันมีความสุขเวลาอยู่กับคุณ', extra: ['sad', 'sleep', 'far'], thTiles: ['ฉัน', 'มี', 'ความสุข', 'เวลา', 'อยู่', 'กับคุณ'], thExtra: ['เศร้า', 'ไกล'] },
+      { en: 'I want to cook dinner for you tonight', th: 'คืนนี้ฉันอยากทำอาหารเย็นให้คุณ', extra: ['breakfast', 'buy', 'tomorrow'], thTiles: ['คืนนี้', 'ฉัน', 'อยาก', 'ทำ', 'อาหารเย็น', 'ให้คุณ'], thExtra: ['ข้าวเช้า', 'ซื้อ'] },
+      { en: 'Thank you for helping me learn English', th: 'ขอบคุณที่ช่วยฉันเรียนภาษาอังกฤษ', extra: ['teach', 'sorry', 'Thai'], thTiles: ['ขอบคุณ', 'ที่', 'ช่วย', 'ฉัน', 'เรียน', 'ภาษาอังกฤษ'], thExtra: ['ขอโทษ', 'ภาษาไทย'] },
+      { en: 'Do you want to watch a movie with me', th: 'คุณอยากดูหนังกับฉันไหม', extra: ['listen', 'song', 'he'], thTiles: ['คุณ', 'อยาก', 'ดู', 'หนัง', 'กับฉัน', 'ไหม'], thExtra: ['ฟัง', 'เพลง'] },
+      { en: 'I will love you forever', th: 'ฉันจะรักคุณตลอดไป', extra: ['like', 'today', 'miss'], thTiles: ['ฉัน', 'จะ', 'รัก', 'คุณ', 'ตลอดไป'], thExtra: ['ชอบ', 'วันนี้'] },
+      { en: 'You make me smile every day', th: 'คุณทำให้ฉันยิ้มทุกวัน', extra: ['cry', 'night', 'laugh'], thTiles: ['คุณ', 'ทำให้', 'ฉัน', 'ยิ้ม', 'ทุกวัน'], thExtra: ['ร้องไห้', 'หัวเราะ'] },
+      { en: "Let's eat something delicious together", th: 'ไปกินอะไรอร่อยๆด้วยกันเถอะ', extra: ['drink', 'alone', 'buy'], thTiles: ['ไป', 'กิน', 'อะไร', 'อร่อยๆ', 'ด้วยกัน', 'เถอะ'], thExtra: ['ดื่ม', 'คนเดียว'] },
+      { en: 'My heart is happy because of you', th: 'หัวใจฉันมีความสุขเพราะคุณ', extra: ['sad', 'head', 'he'], thTiles: ['หัวใจฉัน', 'มี', 'ความสุข', 'เพราะ', 'คุณ'], thExtra: ['เศร้า', 'เขา'] },
+    ],
+  },
+];

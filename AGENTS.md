@@ -45,7 +45,7 @@ no refresh button — receive updates.
 | `js/mascot.js` | Banana SVG generator (`mascotSVG`) with per-mood faces |
 | `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Sfx` (WebAudio tones) |
 | `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (32 packs, ~620 words) |
-| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building (14 packs, 140 sentences, both directions) |
+| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building + `SENTENCE_PACKS_L3` (18 packs, 180 sentences, both directions) |
 
 ## Product rules (learned from the owner — do not regress)
 
@@ -106,8 +106,9 @@ Sentence packs (`data/sentences.js`):
   The correct answer is spoken in English after answering.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
-- Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned content: articles,
-  plurals, is/am/are (classic Thai-speaker pain points).
+- **Level 3 unlocks at 150 total mastered words** (`LEVEL3_WORDS`) — longer
+  sentence packs in `SENTENCE_PACKS_L3` (6-9 word sentences: before/after,
+  will, because, when clauses).
 - Streak = consecutive days with a completed session.
 - Lessons show a live ✓ correct-count chip next to the question counter;
   results celebrate at ≥80% (confetti) and offer "try again" below that.

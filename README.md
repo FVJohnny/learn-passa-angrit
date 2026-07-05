@@ -11,7 +11,8 @@ the browser's localStorage.
   pronunciation hint (แคท-style), an emoji picture, and tap-to-hear audio.
 - **Level 2 — Tiny sentences**: word-tile sentence building, unlocked at 80
   mastered words.
-- **Level 3** — locked, กำลังพัฒนา 🚧
+- **Level 3 — Longer sentences**: 6-9 word sentences, unlocked at 150
+  mastered words.
 - **Mastery**: a word is mastered once answered correctly. A lesson asks every
   not-yet-mastered word in the pack; quitting keeps progress, and missed words
   come back next time. Fully mastering a pack unlocks the next one.

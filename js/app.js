@@ -9,6 +9,7 @@ const appEl = $('#app');
 const STORAGE_KEY = 'gluaynoi-v1';
 const MASTER_AT = 1;        // correct answers to master a word
 const LEVEL2_WORDS = 80;    // mastered words to unlock sentences
+const LEVEL3_WORDS = 150;   // mastered words to unlock longer sentences
 
 // ── word index: id = 'packId:en' ────────────────────────────
 const WORDS_BY_ID = {};
@@ -240,6 +241,7 @@ function renderHome() {
   const streak = streakCurrent();
   const l1done = WORD_PACKS.filter(packDone).length;
   const l2open = state.unlockAll || mw >= LEVEL2_WORDS;
+  const l3open = state.unlockAll || mw >= LEVEL3_WORDS;
 
   appEl.innerHTML = `
   <div class="screen">
@@ -287,10 +289,16 @@ function renderHome() {
       <div class="level-badge">3</div>
       <h2>ประโยคที่ยาวขึ้น<span class="en-line">Longer sentences</span></h2>
     </div>
+    ${l3open ? `
+    <div class="pack-grid">
+      ${SENTENCE_PACKS_L3.map((p, i) => packCardHTML(p, SENTENCE_PACKS_L3, i, true)).join('')}
+    </div>` : `
     <div class="level-locked-note">
-      <span class="big-ico">🚧</span>
-      <span>กำลังพัฒนา… เร็วๆ นี้!<span class="en-line">In progress… coming soon!</span></span>
-    </div>
+      <span class="big-ico">🔒</span>
+      <span>เรียนรู้คำศัพท์ ${LEVEL3_WORDS} คำเพื่อปลดล็อคระดับ 3 (ตอนนี้จำได้ ${mw} คำ)
+        <span class="en-line">Learn ${LEVEL3_WORDS} words to unlock Level 3</span>
+      </span>
+    </div>`}
 
     <div class="version-tag">เวอร์ชัน · version ${currentVersion()}</div>
   </div>`;
@@ -324,7 +332,7 @@ function renderHome() {
       }
       Sfx.pop();
       if (card.dataset.kind === 'sentence') {
-        startSentenceLesson(SENTENCE_PACKS.find((p) => p.id === card.dataset.pack));
+        startSentenceLesson([...SENTENCE_PACKS, ...SENTENCE_PACKS_L3].find((p) => p.id === card.dataset.pack));
       } else {
         startWordLesson(WORD_PACKS.find((p) => p.id === card.dataset.pack));
       }
