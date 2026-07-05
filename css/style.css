@@ -157,24 +157,6 @@ body::before {
 .chip.chip-fire.lit { border-color: var(--butter); background: var(--butter-soft); }
 .chip.chip-score { border-color: var(--mint); background: var(--mint-soft); color: var(--mint-dark); }
 
-/* goal ring */
-.goal-ring { position: relative; width: 46px; height: 46px; cursor: pointer; }
-.goal-ring .ring-num {
-  font-family: var(--font-en);
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: var(--ink-soft);
-  letter-spacing: -0.02em;
-}
-.goal-ring svg { transform: rotate(-90deg); }
-.goal-ring .ring-bg { stroke: #f3e3d3; }
-.goal-ring .ring-fill { stroke: var(--mint-deep); stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
-.goal-ring.done .ring-fill { stroke: var(--butter-deep); }
-.goal-ring .ring-label {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  font-size: 1rem;
-}
-
 /* ── mascot card ─────────────────────────────────────────── */
 .mascot-card {
   background: linear-gradient(135deg, var(--pink-soft) 0%, var(--butter-soft) 55%, var(--mint-soft) 100%);

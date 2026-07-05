@@ -93,8 +93,7 @@ Use natural contractions where the full form sounds stiff — "don't", never
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
 - Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned content: articles,
   plurals, is/am/are (classic Thai-speaker pain points).
-- Daily goal = 20 answers (`DAILY_GOAL`); streak = consecutive days with a
-  completed session.
+- Streak = consecutive days with a completed session.
 - Lessons show a live ✓ correct-count chip next to the question counter;
   results celebrate at ≥80% (confetti) and offer "try again" below that.
 - localStorage key: **`gluaynoi-v1`** — schema in `defaultState()`. Never wipe or

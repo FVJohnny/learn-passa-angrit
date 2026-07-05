@@ -7,7 +7,6 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const appEl = $('#app');
 
 const STORAGE_KEY = 'gluaynoi-v1';
-const DAILY_GOAL = 20;      // answers per day
 const MASTER_AT = 1;        // correct answers to master a word
 const LEVEL2_WORDS = 80;    // mastered words to unlock sentences
 
@@ -25,7 +24,6 @@ function defaultState() {
     name: '',
     pron: true,                 // show pronunciation hints
     words: {},                  // id -> {c, w}
-    daily: { date: '', count: 0 },
     streak: { count: 0, last: '' },
   };
 }
@@ -70,13 +68,6 @@ const masteredTotal = () =>
   Object.keys(state.words).filter((id) => WORDS_BY_ID[id] && isMastered(id)).length;
 const packDone = (pack) => masteredIn(pack) === pack.words.length;
 
-function dailyToday() {
-  if (state.daily.date !== todayStr()) {
-    state.daily = { date: todayStr(), count: 0 };
-  }
-  return state.daily;
-}
-
 function streakCurrent() {
   const { count, last } = state.streak;
   if (!count) return 0;
@@ -120,19 +111,11 @@ function toast(emoji, thMsg, enMsg) {
 // ── mascot speech lines ─────────────────────────────────────
 function greeting() {
   const name = esc(state.name);
-  const d = dailyToday();
-  if (d.count === 0) {
+  if (state.streak.last !== todayStr()) {
     return {
       mood: 'sleep',
       th: `Zzz… ${name} มาปลุกกล้วยน้อยด้วยการเรียนกันเถอะ!`,
       en: "Zzz… wake me up — let's learn!",
-    };
-  }
-  if (d.count >= DAILY_GOAL) {
-    return {
-      mood: 'party',
-      th: `${name} เก่งที่สุดเลย! วันนี้ครบเป้าแล้ว!`,
-      en: "You're amazing! Daily goal complete!",
     };
   }
   return {
@@ -184,21 +167,6 @@ function renderWelcome() {
 // ═════════════════════════════════════════════════════════════
 // SCREEN: home
 // ═════════════════════════════════════════════════════════════
-function goalRingHTML() {
-  const d = dailyToday();
-  const frac = Math.min(1, d.count / DAILY_GOAL);
-  const R = 19, C = 2 * Math.PI * R;
-  return `
-  <div class="goal-ring ${frac >= 1 ? 'done' : ''}" id="goal-ring">
-    <svg width="46" height="46">
-      <circle class="ring-bg" cx="23" cy="23" r="${R}" stroke-width="5" fill="none"/>
-      <circle class="ring-fill" cx="23" cy="23" r="${R}" stroke-width="5" fill="none"
-        stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - frac)}"/>
-    </svg>
-    <div class="ring-label">${frac >= 1 ? '🏆' : `<span class="ring-num">${d.count}/${DAILY_GOAL}</span>`}</div>
-  </div>`;
-}
-
 function packCardHTML(pack, list, index, isSentence) {
   const unlocked = packUnlocked(list, index, isSentence);
   const done = !isSentence && packDone(pack);
@@ -221,8 +189,6 @@ function packCardHTML(pack, list, index, isSentence) {
 }
 
 function renderHome() {
-  dailyToday();
-  save();
   const g = greeting();
   const mw = masteredTotal();
   const streak = streakCurrent();
@@ -237,7 +203,6 @@ function renderHome() {
         <div class="chip chip-fire ${streak > 0 ? 'lit' : ''}" title="เรียนติดต่อกัน">
           🔥 ${streak} <span class="chip-sub">วัน<br>days</span>
         </div>
-        ${goalRingHTML()}
         <button class="icon-btn" id="settings-btn" aria-label="ตั้งค่า settings">⚙️</button>
       </div>
     </div>
@@ -282,12 +247,6 @@ function renderHome() {
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
-  $('#goal-ring').addEventListener('click', () => {
-    const d = dailyToday();
-    toast(d.count >= DAILY_GOAL ? '🏆' : '🎯',
-      `เป้าหมายวันนี้: ตอบคำถาม ${Math.min(d.count, DAILY_GOAL)}/${DAILY_GOAL} ข้อ`,
-      `Daily goal: ${Math.min(d.count, DAILY_GOAL)}/${DAILY_GOAL} answers`);
-  });
   $$('.pack-card').forEach((card) => {
     card.addEventListener('click', () => {
       if (card.dataset.locked) {
@@ -486,16 +445,6 @@ function renderSentenceQuestion(q) {
 }
 
 // ── answering ───────────────────────────────────────────────
-function bumpDaily() {
-  const d = dailyToday();
-  d.count += 1;
-  if (d.count === DAILY_GOAL) {
-    confetti(70);
-    Sfx.fanfare();
-    toast('🏆', 'ครบเป้าหมายวันนี้แล้ว! เก่งมาก!', 'Daily goal reached!');
-  }
-}
-
 function answerWord(q, correct) {
   const stat = state.words[q.id] || (state.words[q.id] = { c: 0, w: 0 });
   if (correct) {
@@ -506,7 +455,6 @@ function answerWord(q, correct) {
     stat.w += 1;
     Sfx.wrong();
   }
-  bumpDaily();
   save();
   if (q.type === 'th2en' || q.type === 'listen') Speech.say(q.word.en);
   showFeedback(correct, q.word);
@@ -515,7 +463,6 @@ function answerWord(q, correct) {
 function answerSentence(q, correct) {
   if (correct) { session.correct += 1; Sfx.correct(); }
   else Sfx.wrong();
-  bumpDaily();
   save();
   showFeedback(correct, { en: q.sentence.en, th: q.sentence.th, pron: '' });
 }
