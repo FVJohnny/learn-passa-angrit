@@ -59,6 +59,8 @@ const shuffle = (arr) => {
 };
 
 const sample = (arr, n) => shuffle(arr).slice(0, n);
+// strip "(1)"-style hints so answer choices can't be matched to the question
+const noParen = (s) => s.replace(/\s*\([^)]*\)/g, '');
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const dstr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -416,15 +418,16 @@ function renderQuestion() {
   if (type === 'en2th') {
     lessonChrome(`
       <div class="q-card">
-        <div class="q-prompt">คำนี้แปลว่าอะไร? · What does this mean?</div>
-        ${q.isNew ? `<span class="q-emoji">${word.emoji}</span>` : ''}
+        <div class="q-prompt">${q.isNew
+          ? '✨ คำใหม่! แปลว่าอะไรนะ? · New word — take a guess!'
+          : 'คำนี้แปลว่าอะไร? · What does this mean?'}</div>
         <div class="q-word-en">${esc(word.en)}</div>
         ${pron}
         <button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button>
       </div>
       <div class="choices">
         ${q.choices.map((c, i) => `
-          <button class="choice-btn" data-i="${i}">${esc(c.th)}</button>`).join('')}
+          <button class="choice-btn" data-i="${i}">${esc(noParen(c.th))}</button>`).join('')}
       </div>`);
     Speech.say(word.en);
   } else if (type === 'th2en') {
