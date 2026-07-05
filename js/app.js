@@ -396,6 +396,7 @@ function lessonChrome(innerHTML) {
     <div class="lesson-top">
       <button class="icon-btn" id="quit-btn" aria-label="ออก quit">✕</button>
       <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="chip chip-score" title="ตอบถูก correct">✓ ${session.correct}</div>
       <div class="chip">${session.index + 1}/${session.questions.length}</div>
     </div>
     ${innerHTML}
@@ -591,6 +592,8 @@ function showFeedback(correct, item) {
     </div>`;
   requestAnimationFrame(() => bar.classList.add('show'));
   $('.progress-fill').style.width = ((session.index + 1) / session.questions.length) * 100 + '%';
+  const scoreChip = $('.chip-score');
+  if (scoreChip) scoreChip.textContent = `✓ ${session.correct}`;
   $('#next-btn').addEventListener('click', () => {
     bar.classList.remove('show');
     session.index += 1;

@@ -155,6 +155,7 @@ body::before {
 }
 .chip .chip-sub { font-size: 0.7rem; color: var(--ink-soft); font-weight: 600; }
 .chip.chip-fire.lit { border-color: var(--butter); background: var(--butter-soft); }
+.chip.chip-score { border-color: var(--mint); background: var(--mint-soft); color: var(--mint-dark); }
 
 /* goal ring */
 .goal-ring { position: relative; width: 46px; height: 46px; }
