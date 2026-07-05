@@ -25,6 +25,7 @@ function defaultState() {
     pron: true,                 // show pronunciation hints
     words: {},                  // id -> {c, w}
     streak: { count: 0, last: '' },
+    unlockAll: false,           // tester mode: every pack open
   };
 }
 
@@ -117,6 +118,7 @@ function streakCurrent() {
 }
 
 function packUnlocked(list, index, isSentence) {
+  if (state.unlockAll) return true; // tester mode
   if (isSentence) return true;      // sentence packs all open once Level 2 is
   if (index === 0) return true;
   return packDone(list[index - 1]); // master every word of the previous pack
@@ -237,7 +239,7 @@ function renderHome() {
   const mw = masteredTotal();
   const streak = streakCurrent();
   const l1done = WORD_PACKS.filter(packDone).length;
-  const l2open = mw >= LEVEL2_WORDS;
+  const l2open = state.unlockAll || mw >= LEVEL2_WORDS;
 
   appEl.innerHTML = `
   <div class="screen">
@@ -247,6 +249,7 @@ function renderHome() {
         <div class="chip chip-fire ${streak > 0 ? 'lit' : ''}" title="เรียนติดต่อกัน">
           🔥 ${streak} <span class="chip-sub">วัน<br>days</span>
         </div>
+        <button class="icon-btn" id="unlock-btn" aria-label="ปลดล็อคทุกแพ็ค unlock all">${state.unlockAll ? '🔓' : '🔐'}</button>
         <button class="icon-btn" id="settings-btn" aria-label="ตั้งค่า settings">⚙️</button>
       </div>
     </div>
@@ -293,6 +296,26 @@ function renderHome() {
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
+  $('#unlock-btn').addEventListener('click', () => {
+    if (state.unlockAll) {
+      if (confirm('ล็อคแพ็คกลับเหมือนเดิม?\nLock packs again?')) {
+        state.unlockAll = false;
+        save();
+        renderHome();
+      }
+      return;
+    }
+    const pw = prompt('รหัสผ่าน · Password:');
+    if (pw === 'johnny1234') {
+      state.unlockAll = true;
+      save();
+      Sfx.unlock();
+      toast('🔓', 'ปลดล็อคทุกแพ็คแล้ว!', 'All packs unlocked!');
+      renderHome();
+    } else if (pw !== null) {
+      toast('❌', 'รหัสผ่านไม่ถูกต้อง', 'Wrong password');
+    }
+  });
   $$('.pack-card').forEach((card) => {
     card.addEventListener('click', () => {
       if (card.dataset.locked) {
