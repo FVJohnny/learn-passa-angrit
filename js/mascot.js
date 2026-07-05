@@ -1,7 +1,6 @@
 // น้องกล้วย — the baby banana mascot, drawn as inline SVG.
-// mascotSVG({ mood, accessories, size })
+// mascotSVG({ mood, size })
 // moods: normal | happy | cheer | oops | sleep | party
-// accessories: array of ids from ACCESSORIES (bow, hat, shades, scarf, balloon, crown)
 
 const BANANA = {
   body: '#FFE066',
@@ -14,11 +13,8 @@ const BANANA = {
 };
 
 function mascotSVG(opts = {}) {
-  const { mood = 'normal', accessories = [], size = 140 } = opts;
-  const has = (id) => accessories.includes(id);
+  const { mood = 'normal', size = 140 } = opts;
   const c = BANANA;
-  // crown wins the head slot over the party hat
-  const headAcc = has('crown') ? 'crown' : has('hat') ? 'hat' : null;
 
   // ── eyes per mood ──
   let eyes;
@@ -43,16 +39,6 @@ function mascotSVG(opts = {}) {
       <circle cx="82.5" cy="86.5" r="2" fill="#fff"/>
       <circle cx="122.5" cy="86.5" r="2" fill="#fff"/>`;
   }
-  if (has('shades') && mood !== 'sleep') {
-    eyes = `
-      <g>
-        <rect x="64" y="80" width="32" height="20" rx="9" fill="#6B4F3A"/>
-        <rect x="104" y="80" width="32" height="20" rx="9" fill="#6B4F3A"/>
-        <path d="M96 88 h8" stroke="#6B4F3A" stroke-width="4"/>
-        <path d="M64 88 h-8 M136 88 h8" stroke="#6B4F3A" stroke-width="4" stroke-linecap="round"/>
-        <path d="M70 85 q6 -3 10 0" stroke="#ffffff66" stroke-width="3" fill="none" stroke-linecap="round"/>
-      </g>`;
-  }
 
   // ── mouth per mood ──
   let mouth;
@@ -73,45 +59,6 @@ function mascotSVG(opts = {}) {
     : `<ellipse cx="58" cy="138" rx="10" ry="15" fill="${c.mid}" transform="rotate(16 58 138)"/>
        <ellipse cx="142" cy="138" rx="10" ry="15" fill="${c.mid}" transform="rotate(-16 142 138)"/>`;
 
-  // ── accessories ──
-  const accBow = has('bow') ? `
-    <g class="m-acc-bow" transform="translate(66 40) rotate(-16)">
-      <path d="M0 8 q-14 -12 -16 0 q-2 12 16 4z" fill="#F87DA0"/>
-      <path d="M4 8 q14 -12 16 0 q2 12 -16 4z" fill="#F87DA0"/>
-      <circle cx="2" cy="9" r="5" fill="#E4638A"/>
-    </g>` : '';
-
-  const accHat = headAcc === 'hat' ? `
-    <g class="m-acc-hat">
-      <path d="M100 2 L124 42 L76 42 Z" fill="#6FB5F0"/>
-      <path d="M100 2 L124 42 L76 42 Z" fill="url(#hatdots)"/>
-      <circle cx="100" cy="4" r="7" fill="#F87DA0"/>
-      <path d="M76 42 q24 8 48 0" stroke="#F87DA0" stroke-width="7" fill="none" stroke-linecap="round"/>
-    </g>` : '';
-
-  const accCrown = headAcc === 'crown' ? `
-    <g class="m-acc-crown">
-      <path d="M76 40 L80 16 L92 30 L102 10 L112 30 L124 16 L128 40 Z" fill="#F5C64F" stroke="#E0A93A" stroke-width="2.5" stroke-linejoin="round"/>
-      <circle cx="80" cy="14" r="4" fill="#F87DA0"/>
-      <circle cx="102" cy="8" r="4" fill="#6FB5F0"/>
-      <circle cx="124" cy="14" r="4" fill="#58C795"/>
-    </g>` : '';
-
-  const accScarf = has('scarf') ? `
-    <g class="m-acc-scarf">
-      <path d="M66 130 q34 18 68 0 l-3 12 q-31 15 -62 0 z" fill="#F87DA0"/>
-      <path d="M116 138 l6 22 q1 5 -5 5 l-8 0 q-5 0 -4 -5 l4 -20z" fill="#F87DA0"/>
-      <path d="M110 156 h14 M109 162 h14" stroke="#E4638A" stroke-width="2.5" stroke-linecap="round"/>
-    </g>` : '';
-
-  const accBalloon = has('balloon') ? `
-    <g class="m-balloon">
-      <path d="M150 100 q16 -28 18 -50" stroke="#C9A227" stroke-width="2" fill="none"/>
-      <ellipse cx="169" cy="42" rx="15" ry="18" fill="#FF8FAB"/>
-      <path d="M169 60 l-4 6 h8 z" fill="#E4638A"/>
-      <path d="M163 34 q4 -5 8 -2" stroke="#ffffff88" stroke-width="3" fill="none" stroke-linecap="round"/>
-    </g>` : '';
-
   const zzz = mood === 'sleep' ? `
     <g font-family="'Baloo 2', sans-serif" font-weight="800" fill="#F5B933">
       <text class="m-zzz" x="140" y="52" font-size="20">z</text>
@@ -128,11 +75,6 @@ function mascotSVG(opts = {}) {
 
   return `
   <svg class="mascot mood-${mood}" width="${size}" height="${size}" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="น้องกล้วย mascot">
-    <defs>
-      <pattern id="hatdots" width="12" height="12" patternUnits="userSpaceOnUse">
-        <circle cx="4" cy="4" r="2.2" fill="#ffffff77"/>
-      </pattern>
-    </defs>
     <ellipse cx="100" cy="184" rx="48" ry="9" fill="rgba(196,152,80,0.22)"/>
     <!-- feet -->
     <ellipse cx="84" cy="176" rx="13" ry="9" fill="${c.dark}"/>
@@ -157,22 +99,7 @@ function mascotSVG(opts = {}) {
     <ellipse cx="130" cy="106" rx="9" ry="6" fill="${c.blush}" opacity="0.7"/>
     ${eyes}
     ${mouth}
-    ${accScarf}
-    ${accBow}
-    ${accHat}
-    ${accCrown}
-    ${accBalloon}
     ${zzz}
     ${partyBits}
   </svg>`;
 }
-
-// Accessory wardrobe — unlocked by total mastered words
-const ACCESSORIES = [
-  { id: 'bow', words: 25, emoji: '🎀', th: 'โบว์', en: 'Bow' },
-  { id: 'hat', words: 60, emoji: '🎉', th: 'หมวกปาร์ตี้', en: 'Party hat' },
-  { id: 'shades', words: 100, emoji: '🕶️', th: 'แว่นกันแดด', en: 'Sunglasses' },
-  { id: 'scarf', words: 160, emoji: '🧣', th: 'ผ้าพันคอ', en: 'Scarf' },
-  { id: 'balloon', words: 230, emoji: '🎈', th: 'ลูกโป่ง', en: 'Balloon' },
-  { id: 'crown', words: 320, emoji: '👑', th: 'มงกุฎ', en: 'Crown' },
-];

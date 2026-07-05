@@ -27,7 +27,6 @@ function defaultState() {
     words: {},                  // id -> {c, w}
     daily: { date: '', count: 0 },
     streak: { count: 0, last: '' },
-    acc: [],                    // unlocked accessory ids
   };
 }
 
@@ -221,22 +220,6 @@ function packCardHTML(pack, list, index, isSentence) {
   </div>`;
 }
 
-function wardrobeHTML() {
-  const mw = masteredTotal();
-  const nextIdx = ACCESSORIES.findIndex((a) => mw < a.words);
-  return `
-  <div class="wardrobe">
-    ${ACCESSORIES.map((a, i) => {
-      const got = mw >= a.words;
-      const cls = got ? 'got' : (i === nextIdx ? 'next-up' : 'locked-w');
-      return `<div class="ward-item ${cls}" title="${a.th}">
-        <span class="w-emoji">${a.emoji}</span>
-        <span class="w-req">${got ? '✓ ได้แล้ว' : `${a.words} คำ`}</span>
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
 function renderHome() {
   dailyToday();
   save();
@@ -260,7 +243,7 @@ function renderHome() {
     </div>
 
     <div class="mascot-card">
-      <div class="mascot-holder">${mascotSVG({ mood: g.mood, accessories: state.acc, size: 130 })}</div>
+      <div class="mascot-holder">${mascotSVG({ mood: g.mood, size: 130 })}</div>
       <div class="speech-bubble">${g.th}<span class="en-line">${g.en}</span></div>
     </div>
 
@@ -296,11 +279,6 @@ function renderHome() {
       <span class="big-ico">🚧</span>
       <span>กำลังพัฒนา… เร็วๆ นี้!<span class="en-line">In progress… coming soon!</span></span>
     </div>
-
-    <div class="level-head">
-      <h2>ตู้เสื้อผ้ากล้วยน้อย 🎀<span class="en-line">Gluay Noi's wardrobe — learn words to dress up!</span></h2>
-    </div>
-    ${wardrobeHTML()}
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
@@ -556,7 +534,7 @@ function showFeedback(correct, item) {
   bar.className = `feedback-bar ${correct ? 'good' : 'bad'}`;
   bar.innerHTML = `
     <div class="feedback-inner">
-      <div class="feedback-mascot">${mascotSVG({ mood: correct ? 'cheer' : 'oops', accessories: state.acc, size: 62 })}</div>
+      <div class="feedback-mascot">${mascotSVG({ mood: correct ? 'cheer' : 'oops', size: 62 })}</div>
       <div class="feedback-msg">${correct ? '💚' : '💪'} ${th}<span class="en-line">${en}</span>${answerLine}</div>
       <button class="icon-btn" id="fb-speak" aria-label="ฟังอีกครั้ง listen again">🔊</button>
       <button class="btn ${correct ? 'btn-mint' : ''}" id="next-btn">ต่อไป<span class="en-line">Next</span></button>
@@ -584,17 +562,6 @@ function markStreak() {
   state.streak.last = t;
 }
 
-function checkAccessories() {
-  const mw = masteredTotal();
-  const fresh = ACCESSORIES.filter((a) => mw >= a.words && !state.acc.includes(a.id));
-  fresh.forEach((a) => {
-    state.acc.push(a.id);
-    Sfx.unlock();
-    toast(a.emoji, `ปลดล็อคแล้ว: ${a.th} ให้กล้วยน้อย!`, `Unlocked: ${a.en} for Gluay Noi!`);
-  });
-  return fresh.length > 0;
-}
-
 function renderResults() {
   const total = session.questions.length;
   const pct = session.correct / total;
@@ -603,7 +570,6 @@ function renderResults() {
     ? masteredIn(session.pack) - session.masteredBefore : 0;
 
   markStreak();
-  const gotNewAcc = checkAccessories();
   save();
 
   const mood = passed ? 'party' : 'happy';
@@ -612,7 +578,7 @@ function renderResults() {
 
   appEl.innerHTML = `
   <div class="screen results-wrap">
-    ${mascotSVG({ mood, accessories: state.acc, size: 160 })}
+    ${mascotSVG({ mood, size: 160 })}
     <div class="results-title">${titleTh}<span class="en-line">${titleEn}</span></div>
     <div class="results-stats">
       <div class="stat-box"><div class="stat-num">${session.correct}/${total}</div><div class="stat-lbl">ตอบถูก<br>correct</div></div>
@@ -626,7 +592,7 @@ function renderResults() {
     </div>
   </div>`;
 
-  if (passed) { confetti(gotNewAcc ? 140 : 100); Sfx.fanfare(); }
+  if (passed) { confetti(100); Sfx.fanfare(); }
 
   $('#home-btn').addEventListener('click', renderHome);
   $('#again-btn')?.addEventListener('click', () => {

@@ -35,7 +35,7 @@ running the old code and bug fixes silently don't reach them. Docs-only changes
 | `index.html` | Single page; screens are rendered into `#app` by JS |
 | `css/style.css` | Entire design system (pastel theme, CSS variables at top) |
 | `js/app.js` | State, screens, lessons, streak/goal/stars logic |
-| `js/mascot.js` | Banana SVG generator (`mascotSVG`) + `ACCESSORIES` list |
+| `js/mascot.js` | Banana SVG generator (`mascotSVG`) with per-mood faces |
 | `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Sfx` (WebAudio tones) |
 | `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (32 packs, ~430 words) |
 | `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building |
@@ -91,7 +91,6 @@ Use natural contractions where the full form sounds stiff — "don't", never
   fully-mastered pack replays all of its words.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
-- Accessories unlock at 25/60/100/160/230/320 mastered words (`ACCESSORIES`).
 - Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned content: articles,
   plurals, is/am/are (classic Thai-speaker pain points).
 - Daily goal = 20 answers (`DAILY_GOAL`); streak = consecutive days with a
