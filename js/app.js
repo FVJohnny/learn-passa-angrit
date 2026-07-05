@@ -9,7 +9,7 @@ const appEl = $('#app');
 const STORAGE_KEY = 'gluaynoi-v1';
 const DAILY_GOAL = 20;      // answers per day
 const MASTER_AT = 1;        // correct answers to master a word
-const LEVEL2_STARS = 10;    // total stars to unlock sentences
+const LEVEL2_WORDS = 80;    // mastered words to unlock sentences
 
 // ── word index: id = 'packId:en' ────────────────────────────
 const WORDS_BY_ID = {};
@@ -25,8 +25,6 @@ function defaultState() {
     name: '',
     pron: true,                 // show pronunciation hints
     words: {},                  // id -> {c, w}
-    review: {},                 // id -> corrects still needed
-    packs: {},                  // packId -> stars (0-3)
     daily: { date: '', count: 0 },
     streak: { count: 0, last: '' },
     acc: [],                    // unlocked accessory ids
@@ -68,11 +66,10 @@ const yesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); r
 
 const wstat = (id) => state.words[id] || { c: 0, w: 0 };
 const isMastered = (id) => wstat(id).c >= MASTER_AT;
-const packStars = (id) => state.packs[id] || 0;
-const totalStars = () =>
-  [...WORD_PACKS, ...SENTENCE_PACKS].reduce((sum, p) => sum + packStars(p.id), 0);
 const masteredIn = (pack) => pack.words.filter((w) => isMastered(`${pack.id}:${w.en}`)).length;
-const reviewIds = () => Object.keys(state.review).filter((id) => WORDS_BY_ID[id]);
+const masteredTotal = () =>
+  Object.keys(state.words).filter((id) => WORDS_BY_ID[id] && isMastered(id)).length;
+const packDone = (pack) => masteredIn(pack) === pack.words.length;
 
 function dailyToday() {
   if (state.daily.date !== todayStr()) {
@@ -87,9 +84,10 @@ function streakCurrent() {
   return (last === todayStr() || last === yesterdayStr()) ? count : 0;
 }
 
-function packUnlocked(list, index) {
+function packUnlocked(list, index, isSentence) {
+  if (isSentence) return true;      // sentence packs all open once Level 2 is
   if (index === 0) return true;
-  return packStars(list[index - 1].id) >= 1;
+  return packDone(list[index - 1]); // master every word of the previous pack
 }
 
 // ── confetti & toast ────────────────────────────────────────
@@ -203,39 +201,37 @@ function goalRingHTML() {
 }
 
 function packCardHTML(pack, list, index, isSentence) {
-  const unlocked = packUnlocked(list, index);
-  const stars = packStars(pack.id);
-  const starsHTML = [1, 2, 3].map((i) => `<span class="${i <= stars ? '' : 'off'}">⭐</span>`).join('');
+  const unlocked = packUnlocked(list, index, isSentence);
+  const done = !isSentence && packDone(pack);
   let countHTML = '';
   if (!isSentence) {
     const m = masteredIn(pack);
-    countHTML = `<span class="pack-count">${m}/${pack.words.length} คำ</span>`;
+    countHTML = `<span class="pack-count">${done ? '✓ ครบแล้ว' : `${m}/${pack.words.length} คำ`}</span>`;
   } else {
     countHTML = `<span class="pack-count">${pack.sentences.length} ประโยค</span>`;
   }
   return `
-  <div class="pack-card ${unlocked ? '' : 'locked'} ${stars >= 3 ? 'done' : ''}"
+  <div class="pack-card ${unlocked ? '' : 'locked'} ${done ? 'done' : ''}"
        data-pack="${pack.id}" data-kind="${isSentence ? 'sentence' : 'word'}" data-locked="${unlocked ? '' : '1'}">
     ${unlocked ? '' : '<span class="lock-corner">🔒</span>'}
     <span class="pack-ico">${pack.icon}</span>
     <span class="pack-th">${pack.th}</span>
     <span class="pack-en">${pack.en}</span>
-    <div class="pack-stars">${starsHTML}</div>
     ${countHTML}
   </div>`;
 }
 
 function wardrobeHTML() {
-  const stars = totalStars();
-  const nextIdx = ACCESSORIES.findIndex((a) => stars < a.stars);
+  const mw = masteredTotal();
+  const nextIdx = ACCESSORIES.findIndex((a) => mw < a.words);
   return `
   <div class="wardrobe">
     ${ACCESSORIES.map((a, i) => {
-      const got = stars >= a.stars;
+      const got = mw >= a.words;
       const cls = got ? 'got' : (i === nextIdx ? 'next-up' : 'locked-w');
       return `<div class="ward-item ${cls}" title="${a.th}">
         <span class="w-emoji">${a.emoji}</span>
-        <span class="w-req">${got ? '✓ ได้แล้ว' : `⭐ ${a.stars}`}</span>
+        <span class="w-req">${got ? '✓ ได้แล้ว' : `${a.words} คำ`}</span>
       </div>`;
     }).join('')}
   </div>`;
@@ -245,11 +241,10 @@ function renderHome() {
   dailyToday();
   save();
   const g = greeting();
-  const stars = totalStars();
+  const mw = masteredTotal();
   const streak = streakCurrent();
-  const l1done = WORD_PACKS.filter((p) => packStars(p.id) >= 1).length;
-  const l2open = stars >= LEVEL2_STARS;
-  const rvCount = reviewIds().length;
+  const l1done = WORD_PACKS.filter(packDone).length;
+  const l2open = mw >= LEVEL2_WORDS;
 
   appEl.innerHTML = `
   <div class="screen">
@@ -269,13 +264,6 @@ function renderHome() {
       <div class="speech-bubble">${g.th}<span class="en-line">${g.en}</span></div>
     </div>
 
-    ${rvCount > 0 ? `
-    <button class="review-card" id="review-btn">
-      <span class="rv-ico">🔁</span>
-      <span><strong>ทบทวนคำที่พลาด</strong><span class="en-line">Review missed words</span></span>
-      <span class="rv-count">${rvCount}</span>
-    </button>` : ''}
-
     <div class="level-head level-1">
       <div class="level-badge">1</div>
       <h2>คำศัพท์<span class="en-line">Words</span></h2>
@@ -288,7 +276,6 @@ function renderHome() {
     <div class="level-head level-2">
       <div class="level-badge">2</div>
       <h2>ประโยคสั้นๆ<span class="en-line">Tiny sentences</span></h2>
-      ${l2open ? `<span class="lvl-progress">${SENTENCE_PACKS.filter((p) => packStars(p.id) >= 1).length}/${SENTENCE_PACKS.length} แพ็ค</span>` : ''}
     </div>
     ${l2open ? `
     <div class="pack-grid">
@@ -296,8 +283,8 @@ function renderHome() {
     </div>` : `
     <div class="level-locked-note">
       <span class="big-ico">🔒</span>
-      <span>สะสมดาวอีก <b>${LEVEL2_STARS - stars}</b> ดวงเพื่อปลดล็อคระดับ 2 (ตอนนี้มี ⭐ ${stars})
-        <span class="en-line">Collect ${LEVEL2_STARS - stars} more stars to unlock Level 2</span>
+      <span>เรียนรู้คำศัพท์อีก <b>${LEVEL2_WORDS - mw}</b> คำเพื่อปลดล็อคระดับ 2 (ตอนนี้จำได้ ${mw} คำ)
+        <span class="en-line">Learn ${LEVEL2_WORDS - mw} more words to unlock Level 2</span>
       </span>
     </div>`}
 
@@ -311,17 +298,16 @@ function renderHome() {
     </div>
 
     <div class="level-head">
-      <h2>ตู้เสื้อผ้ากล้วยน้อย 🎀<span class="en-line">Gluay Noi's wardrobe — earn stars to dress up!</span></h2>
+      <h2>ตู้เสื้อผ้ากล้วยน้อย 🎀<span class="en-line">Gluay Noi's wardrobe — learn words to dress up!</span></h2>
     </div>
     ${wardrobeHTML()}
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
-  if (rvCount > 0) $('#review-btn').addEventListener('click', () => startReview());
   $$('.pack-card').forEach((card) => {
     card.addEventListener('click', () => {
       if (card.dataset.locked) {
-        toast('🔒', 'ทำแพ็คก่อนหน้าให้ได้ 1 ดาวก่อนนะ', 'Earn 1 star on the previous pack first');
+        toast('🔒', 'เรียนแพ็คก่อนหน้าให้ครบทุกคำก่อนนะ', 'Learn all words in the previous pack first');
         return;
       }
       Sfx.pop();
@@ -357,18 +343,6 @@ function startWordLesson(pack) {
     mode: 'words', pack,
     questions: shuffle(words).map((w) => questionForWord(w, pack)),
     index: 0, correct: 0, masteredBefore: masteredIn(pack),
-  };
-  renderQuestion();
-}
-
-function startReview() {
-  session = {
-    mode: 'review', pack: null,
-    questions: shuffle(reviewIds()).map((id) => {
-      const { word, pack } = WORDS_BY_ID[id];
-      return questionForWord(word, pack);
-    }),
-    index: 0, correct: 0,
   };
   renderQuestion();
 }
@@ -543,11 +517,9 @@ function answerWord(q, correct) {
   if (correct) {
     session.correct += 1;
     stat.c += 1;
-    if (state.review[q.id] && --state.review[q.id] <= 0) delete state.review[q.id];
     Sfx.correct();
   } else {
     stat.w += 1;
-    state.review[q.id] = 2;
     Sfx.wrong();
   }
   bumpDaily();
@@ -613,8 +585,8 @@ function markStreak() {
 }
 
 function checkAccessories() {
-  const stars = totalStars();
-  const fresh = ACCESSORIES.filter((a) => stars >= a.stars && !state.acc.includes(a.id));
+  const mw = masteredTotal();
+  const fresh = ACCESSORIES.filter((a) => mw >= a.words && !state.acc.includes(a.id));
   fresh.forEach((a) => {
     state.acc.push(a.id);
     Sfx.unlock();
@@ -627,35 +599,20 @@ function renderResults() {
   const total = session.questions.length;
   const pct = session.correct / total;
   const passed = pct >= 0.8;
-  let starsNow = 0, newMastered = 0;
-
-  if (session.mode !== 'review' && passed) {
-    state.packs[session.pack.id] = Math.min(3, packStars(session.pack.id) + 1);
-  }
-  if (session.mode !== 'review') starsNow = packStars(session.pack.id);
-  if (session.mode === 'words') newMastered = masteredIn(session.pack) - session.masteredBefore;
+  const newMastered = session.mode === 'words'
+    ? masteredIn(session.pack) - session.masteredBefore : 0;
 
   markStreak();
   const gotNewAcc = checkAccessories();
   save();
 
   const mood = passed ? 'party' : 'happy';
-  const titleTh = session.mode === 'review'
-    ? 'ทบทวนเสร็จแล้ว!'
-    : passed ? (pct === 1 ? 'เพอร์เฟค! 💯' : 'ผ่านแล้ว! ได้ดาวเพิ่ม!') : 'เกือบแล้ว! ลองอีกครั้งนะ';
-  const titleEn = session.mode === 'review'
-    ? 'Review complete!'
-    : passed ? (pct === 1 ? 'Perfect score!' : 'Passed — you earned a star!') : 'Almost! Try once more';
-
-  const starsHTML = session.mode === 'review' ? '' : `
-    <div class="results-stars">
-      ${[1, 2, 3].map((i) => `<span class="star ${i <= starsNow ? '' : 'off'}">⭐</span>`).join('')}
-    </div>`;
+  const titleTh = pct === 1 ? 'เพอร์เฟค! 💯' : passed ? 'เยี่ยมมาก!' : 'เกือบแล้ว! ลองอีกครั้งนะ';
+  const titleEn = pct === 1 ? 'Perfect score!' : passed ? 'Great job!' : 'Almost! Try once more';
 
   appEl.innerHTML = `
   <div class="screen results-wrap">
     ${mascotSVG({ mood, accessories: state.acc, size: 160 })}
-    ${starsHTML}
     <div class="results-title">${titleTh}<span class="en-line">${titleEn}</span></div>
     <div class="results-stats">
       <div class="stat-box"><div class="stat-num">${session.correct}/${total}</div><div class="stat-lbl">ตอบถูก<br>correct</div></div>
@@ -663,7 +620,7 @@ function renderResults() {
       <div class="stat-box"><div class="stat-num">🔥 ${streakCurrent()}</div><div class="stat-lbl">วันติดต่อกัน<br>day streak</div></div>
     </div>
     <div class="results-actions">
-      ${!passed && session.mode !== 'review' ? `
+      ${!passed ? `
       <button class="btn btn-big" id="again-btn">ลองอีกครั้ง 💪<span class="en-line">Try again</span></button>` : ''}
       <button class="btn ${passed ? 'btn-big' : 'btn-ghost btn-big'}" id="home-btn">กลับหน้าหลัก 🏠<span class="en-line">Home</span></button>
     </div>

@@ -167,12 +167,12 @@ function mascotSVG(opts = {}) {
   </svg>`;
 }
 
-// Accessory wardrobe — unlocked by total stars
+// Accessory wardrobe — unlocked by total mastered words
 const ACCESSORIES = [
-  { id: 'bow', stars: 3, emoji: '🎀', th: 'โบว์', en: 'Bow' },
-  { id: 'hat', stars: 6, emoji: '🎉', th: 'หมวกปาร์ตี้', en: 'Party hat' },
-  { id: 'shades', stars: 10, emoji: '🕶️', th: 'แว่นกันแดด', en: 'Sunglasses' },
-  { id: 'scarf', stars: 15, emoji: '🧣', th: 'ผ้าพันคอ', en: 'Scarf' },
-  { id: 'balloon', stars: 21, emoji: '🎈', th: 'ลูกโป่ง', en: 'Balloon' },
-  { id: 'crown', stars: 30, emoji: '👑', th: 'มงกุฎ', en: 'Crown' },
+  { id: 'bow', words: 25, emoji: '🎀', th: 'โบว์', en: 'Bow' },
+  { id: 'hat', words: 60, emoji: '🎉', th: 'หมวกปาร์ตี้', en: 'Party hat' },
+  { id: 'shades', words: 100, emoji: '🕶️', th: 'แว่นกันแดด', en: 'Sunglasses' },
+  { id: 'scarf', words: 160, emoji: '🧣', th: 'ผ้าพันคอ', en: 'Scarf' },
+  { id: 'balloon', words: 230, emoji: '🎈', th: 'ลูกโป่ง', en: 'Balloon' },
+  { id: 'crown', words: 320, emoji: '👑', th: 'มงกุฎ', en: 'Crown' },
 ];

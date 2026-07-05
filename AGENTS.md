@@ -87,15 +87,16 @@ distractors must NOT appear in the sentence itself (would create ambiguity).
   wants it this way; don't raise it back to 3).
 - A session covers **all not-yet-mastered words** of the pack (owner request —
   not a random subset). Quitting mid-session keeps every answer already given.
-  A fully-mastered pack replays all of its words. **≥80% on a completed session
-  earns the pack one star** (max 3 per pack).
-- 1 star on a pack unlocks the next pack; **10 total stars unlock Level 2**
-  (`LEVEL2_STARS`). Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned
-  content: articles, plurals, is/am/are (classic Thai-speaker pain points).
-- Wrong answer → word enters review queue until answered correctly twice.
+  A fully-mastered pack replays all of its words.
+- **There are NO stars and NO review queue** — the owner had both removed.
+  Don't reintroduce them. Progression is mastery-only:
+  - a pack unlocks when the **previous pack is fully mastered**;
+  - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`);
+  - accessories unlock at 25/60/100/160/230/320 mastered words (`ACCESSORIES`).
+- Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned content: articles,
+  plurals, is/am/are (classic Thai-speaker pain points).
 - Daily goal = 20 answers (`DAILY_GOAL`); streak = consecutive days with a
   completed session.
-- Accessories unlock at total stars 3/6/10/15/21/30 (see `ACCESSORIES`).
 - localStorage key: **`gluaynoi-v1`** — schema in `defaultState()`. Never wipe or
   rename it casually: it holds her streak and all progress. If you must migrate
   the schema, write a migration from the old key.
