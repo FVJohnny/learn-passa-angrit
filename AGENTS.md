@@ -102,9 +102,12 @@ Use natural contractions where the full form sounds stiff — "don't", never
 - Streak = consecutive days with a completed session.
 - Lessons show a live ✓ correct-count chip next to the question counter;
   results celebrate at ≥80% (confetti) and offer "try again" below that.
-- localStorage key: **`gluaynoi-v1`** — schema in `defaultState()`. Never wipe or
-  rename it casually: it holds her streak and all progress. If you must migrate
-  the schema, write a migration from the old key.
+- Progress is stored under key **`gluaynoi-v1`**, double-written to localStorage
+  AND IndexedDB (`gluaynoi-db`/kv/state) with a `rev` counter — iOS home-screen
+  apps can lose un-flushed localStorage on force-quit, so boot recovers from
+  whichever copy has the higher rev. Schema in `defaultState()`. Never wipe or
+  rename these casually; a schema change needs a migration. Settings offer
+  backup/restore via a base64 code.
 
 ## Testing / verification
 

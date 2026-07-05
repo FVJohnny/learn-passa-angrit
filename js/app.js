@@ -37,7 +37,49 @@ function loadState() {
 }
 
 let state = loadState();
-const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+// ── durable storage: double-write to IndexedDB ──────────────
+// iOS standalone web apps can fail to flush localStorage to disk before a
+// force-quit kills the process; IndexedDB commits transactionally and
+// survives. Write both, recover from whichever has the highest rev.
+function idbOpen() {
+  return new Promise((resolve) => {
+    if (!window.indexedDB) return resolve(null);
+    try {
+      const req = indexedDB.open('gluaynoi-db', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('kv');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+      req.onblocked = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+const idbReady = idbOpen();
+
+async function idbSet(json) {
+  const db = await idbReady;
+  if (!db) return;
+  try { db.transaction('kv', 'readwrite').objectStore('kv').put(json, 'state'); } catch (e) {}
+}
+
+async function idbGet() {
+  const db = await idbReady;
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const req = db.transaction('kv', 'readonly').objectStore('kv').get('state');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+
+const save = () => {
+  state.rev = (state.rev || 0) + 1;
+  const json = JSON.stringify(state);
+  try { localStorage.setItem(STORAGE_KEY, json); } catch (e) {}
+  idbSet(json);
+};
 
 // ── helpers ─────────────────────────────────────────────────
 const esc = (s) => String(s).replace(/[&<>"']/g, (ch) =>
@@ -623,8 +665,9 @@ function openSettings() {
   });
   $('#set-done', backdrop).addEventListener('click', close);
   $('#set-reset', backdrop).addEventListener('click', () => {
-    if (confirm('แน่ใจไหม? ดาวและความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? All progress will be lost.')) {
+    if (confirm('แน่ใจไหม? ความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? All progress will be lost.')) {
       localStorage.removeItem(STORAGE_KEY);
+      idbSet(null);
       state = loadState();
       backdrop.remove();
       renderWelcome();
@@ -674,3 +717,18 @@ if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
 if (state.name) renderHome();
 else renderWelcome();
 checkForUpdate();
+
+// if IndexedDB has newer progress than localStorage (e.g. localStorage was
+// lost to a force-quit), recover it — only before any lesson has started
+idbGet().then((raw) => {
+  if (!raw || session) return;
+  try {
+    const data = JSON.parse(raw);
+    if ((data.rev || 0) > (state.rev || 0)) {
+      state = Object.assign(defaultState(), data);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      if (state.name) renderHome();
+      else renderWelcome();
+    }
+  } catch (e) { /* corrupted backup — keep current state */ }
+});
