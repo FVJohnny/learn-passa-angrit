@@ -9,14 +9,13 @@ the browser's localStorage.
 - **Level 1 — Words**: 430+ words across 32 themed packs (greetings, food, animals,
   family, verbs, feelings…). Each word has English, Thai, a Thai-script
   pronunciation hint (แคท-style), an emoji picture, and tap-to-hear audio.
-- **Level 2 — Tiny sentences**: word-tile sentence building, unlocked at ⭐ 10.
+- **Level 2 — Tiny sentences**: word-tile sentence building, unlocked at 80
+  mastered words.
 - **Level 3** — locked, กำลังพัฒนา 🚧
-- **Mastery & review**: a word is mastered after 3 correct answers; missed words
-  enter a review queue that resurfaces them.
-- **Stars & unlocking**: score 80%+ in a session to earn a pack star; stars unlock
-  the next pack and dress-up accessories for Gluay Noi (bow → party hat →
-  sunglasses → scarf → balloon → crown).
-- **Daily hooks**: streak counter, daily goal ring, confetti celebrations.
+- **Mastery**: a word is mastered once answered correctly. A lesson asks every
+  not-yet-mastered word in the pack; quitting keeps progress, and missed words
+  come back next time. Fully mastering a pack unlocks the next one.
+- **Streak**: consecutive days with a completed session, held up by the banana.
 - **Bilingual UI**: Thai first, readable English underneath, everywhere.
 - Audio via the browser's built-in speech synthesis — free and offline.
 
@@ -37,7 +36,8 @@ unique within a pack (they're used as answer choices).
 
 ## Deployment
 
-Hosted on GitHub Pages from the `main` branch root.
+Hosted on GitHub Pages from the `main` branch root. Push to `main` to deploy —
+and remember to bump the `?v=` asset version in `index.html` (see AGENTS.md).
 
 ---
 
