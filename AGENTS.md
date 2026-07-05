@@ -45,7 +45,7 @@ no refresh button — receive updates.
 | `js/mascot.js` | Banana SVG generator (`mascotSVG`) with per-mood faces |
 | `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Sfx` (WebAudio tones) |
 | `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (32 packs, ~620 words) |
-| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building (8 packs, 80 sentences, both directions) |
+| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building (14 packs, 140 sentences, both directions) |
 
 ## Product rules (learned from the owner — do not regress)
 
