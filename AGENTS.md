@@ -28,11 +28,12 @@ on ALL asset URLs in `index.html` in the same commit.** If you forget, users kee
 running the old code and bug fixes silently don't reach them. Docs-only changes
 (README, this file) don't need a bump.
 
-The version number also powers in-app updates: the app compares its own
+The version number also powers auto-updates: the app compares its own
 `js/app.js?v=N` against a freshly fetched `index.html` (on launch and whenever
-it returns to the foreground) and shows a tap-to-update pill when the server has
-a higher `N`. This is how users inside home-screen web apps — which have no
-refresh button — receive updates.
+it returns to the foreground) and silently reloads itself when the server has a
+higher `N` — never mid-lesson, only on the home screen, at most one attempt per
+version per session. This is how users inside home-screen web apps — which have
+no refresh button — receive updates.
 
 ## File map
 

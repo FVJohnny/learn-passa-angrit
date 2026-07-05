@@ -231,6 +231,8 @@ function packCardHTML(pack, list, index, isSentence) {
 }
 
 function renderHome() {
+  session = null;
+  maybeApplyUpdate();
   const g = greeting();
   const mw = masteredTotal();
   const streak = streakCurrent();
@@ -677,12 +679,25 @@ function openSettings() {
 
 // ═════════════════════════════════════════════════════════════
 // auto-update: home-screen apps have no refresh button, so poll
-// the server's index.html and offer a tap-to-update pill
+// the server's index.html and reload automatically when a newer
+// version is deployed — but never in the middle of a lesson
 // ═════════════════════════════════════════════════════════════
+let updateVersion = 0;
+
 function currentVersion() {
   const s = document.querySelector('script[src*="js/app.js"]');
   const m = s && s.src.match(/[?&]v=(\d+)/);
   return m ? Number(m[1]) : 0;
+}
+
+function maybeApplyUpdate() {
+  if (!updateVersion || session) return;
+  // one attempt per version per session — prevents a reload loop while
+  // the CDN still serves the old index.html
+  if (sessionStorage.getItem('updated-to') === String(updateVersion)) return;
+  try { sessionStorage.setItem('updated-to', String(updateVersion)); } catch (e) {}
+  // unique query string forces a fresh index.html past every cache
+  location.replace(location.pathname + '?u=' + updateVersion);
 }
 
 async function checkForUpdate() {
@@ -691,18 +706,11 @@ async function checkForUpdate() {
     if (!res.ok) return;
     const html = await res.text();
     const m = html.match(/js\/app\.js\?v=(\d+)/);
-    if (m && Number(m[1]) > currentVersion()) showUpdatePill();
+    if (m && Number(m[1]) > currentVersion()) {
+      updateVersion = Number(m[1]);
+      maybeApplyUpdate();
+    }
   } catch (e) { /* offline — try again next time */ }
-}
-
-function showUpdatePill() {
-  if ($('#update-pill')) return;
-  const pill = document.createElement('button');
-  pill.id = 'update-pill';
-  pill.className = 'update-pill';
-  pill.innerHTML = `🎁 มีเวอร์ชันใหม่! แตะเพื่ออัปเดต<span class="en-line">New version — tap to update</span>`;
-  pill.addEventListener('click', () => location.reload());
-  document.body.appendChild(pill);
 }
 
 document.addEventListener('visibilitychange', () => {
