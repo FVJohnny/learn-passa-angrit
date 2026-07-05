@@ -68,8 +68,10 @@ const Sfx = {
   },
 
   wrong() {
-    this.tone(330, 0, 0.2, { type: 'sine', gain: 0.12 });
-    this.tone(262, 0.12, 0.3, { type: 'sine', gain: 0.1 });
+    // triangle waves carry on small phone speakers where low sines vanish
+    this.tone(370, 0, 0.16, { type: 'triangle', gain: 0.25 });
+    this.tone(277, 0.14, 0.38, { type: 'triangle', gain: 0.25 });
+    if (navigator.vibrate) navigator.vibrate(90);
   },
 
   pop() {
