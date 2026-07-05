@@ -289,9 +289,7 @@ body::before {
   display: inline-block;
   padding: 2px 10px;
   margin-top: 6px;
-}
-.pack-card .pack-last { background: var(--blue-soft); color: var(--blue-deep); }
-.pack-card.done { border-color: var(--butter); background: linear-gradient(160deg, #fffdf9, var(--butter-soft)); }
+}.pack-card.done { border-color: var(--butter); background: linear-gradient(160deg, #fffdf9, var(--butter-soft)); }
 .pack-card.locked { filter: grayscale(0.85); opacity: 0.6; cursor: default; }
 .pack-card.locked:active { transform: none; box-shadow: 0 4px 0 #f0e2d3; }
 .pack-card .lock-corner { position: absolute; top: 8px; right: 10px; font-size: 0.95rem; }
