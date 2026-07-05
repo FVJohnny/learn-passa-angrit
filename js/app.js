@@ -31,6 +31,7 @@ function defaultState() {
     daily: { date: '', count: 0 },
     streak: { count: 0, last: '' },
     acc: [],                    // unlocked accessory ids
+    scores: {},                 // packId -> {c, t} last session score
   };
 }
 
@@ -214,6 +215,8 @@ function packCardHTML(pack, list, index, isSentence) {
   } else {
     countHTML = `<span class="pack-count">${pack.sentences.length} ประโยค</span>`;
   }
+  const last = state.scores[pack.id];
+  if (last) countHTML += ` <span class="pack-count pack-last" title="คะแนนล่าสุด · last score">ล่าสุด ✓${last.c}/${last.t}</span>`;
   return `
   <div class="pack-card ${unlocked ? '' : 'locked'} ${stars >= 3 ? 'done' : ''}"
        data-pack="${pack.id}" data-kind="${isSentence ? 'sentence' : 'word'}" data-locked="${unlocked ? '' : '1'}">
@@ -629,8 +632,9 @@ function renderResults() {
   const passed = pct >= 0.8;
   let starsNow = 0, newMastered = 0;
 
-  if (session.mode !== 'review' && passed) {
-    state.packs[session.pack.id] = Math.min(3, packStars(session.pack.id) + 1);
+  if (session.mode !== 'review') {
+    state.scores[session.pack.id] = { c: session.correct, t: total };
+    if (passed) state.packs[session.pack.id] = Math.min(3, packStars(session.pack.id) + 1);
   }
   if (session.mode !== 'review') starsNow = packStars(session.pack.id);
   if (session.mode === 'words') newMastered = masteredIn(session.pack) - session.masteredBefore;
