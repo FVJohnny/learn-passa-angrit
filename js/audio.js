@@ -22,26 +22,38 @@ const Speech = {
     }
   },
 
+  // cancel + speak in the same tick randomly drops the new utterance on
+  // iOS/Safari (the old one can keep playing over the new question) —
+  // always cancel first, then speak a beat later
+  _speak(u) {
+    speechSynthesis.cancel();
+    clearTimeout(this._t);
+    this._t = setTimeout(() => speechSynthesis.speak(u), 80);
+  },
+
   say(text, { rate = 0.82 } = {}) {
     if (typeof speechSynthesis === 'undefined') return;
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-US';
     if (this.voice) u.voice = this.voice;
     u.rate = rate;
     u.pitch = 1.06;
-    speechSynthesis.speak(u);
+    this._speak(u);
     return u;
   },
 
   sayThai(text, { rate = 0.9 } = {}) {
     if (typeof speechSynthesis === 'undefined') return;
-    speechSynthesis.cancel();
+    // voices can load late; re-check for a Thai voice at speak time
+    if (!this.thVoice) {
+      this.thVoice = speechSynthesis.getVoices()
+        .find((v) => v.lang.toLowerCase().startsWith('th')) || null;
+    }
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'th-TH';
     if (this.thVoice) u.voice = this.thVoice;
     u.rate = rate;
-    speechSynthesis.speak(u);
+    this._speak(u);
     return u;
   },
 };
