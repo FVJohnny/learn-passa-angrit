@@ -620,6 +620,16 @@ body::before {
   color: var(--ink-soft);
   opacity: 0.65;
 }
+.version-tag.has-update {
+  opacity: 1;
+  cursor: pointer;
+  color: var(--pink-dark);
+  font-family: var(--font-thai);
+  font-weight: 700;
+  font-size: 0.95rem;
+  animation: pulse-update 1.6s ease-in-out infinite;
+}
+@keyframes pulse-update { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
 /* ── small screens ───────────────────────────────────────── */
 @media (max-width: 460px) {

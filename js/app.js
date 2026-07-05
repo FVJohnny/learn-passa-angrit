@@ -300,10 +300,11 @@ function renderHome() {
       </span>
     </div>`}
 
-    <div class="version-tag">เวอร์ชัน · version ${currentVersion()}</div>
+    <div class="version-tag" id="version-tag">เวอร์ชัน · version ${currentVersion()}</div>
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
+  refreshVersionTag();
   $('#unlock-btn').addEventListener('click', () => {
     if (state.unlockAll) {
       if (confirm('ล็อคแพ็คกลับเหมือนเดิม?\nLock packs again?')) {
@@ -732,6 +733,14 @@ function currentVersion() {
   return m ? Number(m[1]) : 0;
 }
 
+function refreshVersionTag() {
+  const el = $('#version-tag');
+  if (!el || updateVersion <= currentVersion()) return;
+  el.classList.add('has-update');
+  el.innerHTML = `🎁 อัปเดตเป็นเวอร์ชัน ${updateVersion} — แตะเลย<span class="en-line">Update to version ${updateVersion} — tap here</span>`;
+  el.onclick = () => location.replace(location.pathname + '?u=' + updateVersion);
+}
+
 function maybeApplyUpdate() {
   if (!updateVersion || session) return;
   // one attempt per version per session — prevents a reload loop while
@@ -750,6 +759,7 @@ async function checkForUpdate() {
     const m = html.match(/js\/app\.js\?v=(\d+)/);
     if (m && Number(m[1]) > currentVersion()) {
       updateVersion = Number(m[1]);
+      refreshVersionTag();
       maybeApplyUpdate();
     }
   } catch (e) { /* offline — try again next time */ }
@@ -758,6 +768,7 @@ async function checkForUpdate() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') checkForUpdate();
 });
+setInterval(() => { if (!document.hidden) checkForUpdate(); }, 10000);
 
 // ═════════════════════════════════════════════════════════════
 // boot
