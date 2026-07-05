@@ -2,6 +2,7 @@
 
 const Speech = {
   voice: null,
+  thVoice: null,
 
   init() {
     const pick = () => {
@@ -13,6 +14,7 @@ const Speech = {
         en.find((v) => v.lang === 'en-US') ||
         en[0] ||
         null;
+      this.thVoice = voices.find((v) => v.lang.toLowerCase().startsWith('th')) || null;
     };
     pick();
     if (typeof speechSynthesis !== 'undefined') {
@@ -28,6 +30,17 @@ const Speech = {
     if (this.voice) u.voice = this.voice;
     u.rate = rate;
     u.pitch = 1.06;
+    speechSynthesis.speak(u);
+    return u;
+  },
+
+  sayThai(text, { rate = 0.9 } = {}) {
+    if (typeof speechSynthesis === 'undefined') return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'th-TH';
+    if (this.thVoice) u.voice = this.thVoice;
+    u.rate = rate;
     speechSynthesis.speak(u);
     return u;
   },

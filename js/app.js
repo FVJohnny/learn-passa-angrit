@@ -396,11 +396,13 @@ function renderQuestion() {
         <div class="q-prompt">ภาษาอังกฤษพูดว่าอย่างไร? · How do you say it in English?</div>
         <span class="q-emoji">${word.emoji}</span>
         <div class="q-word-th">${esc(word.th)}</div>
+        <div><button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button></div>
       </div>
       <div class="choices">
         ${q.choices.map((c, i) => `
           <button class="choice-btn" data-i="${i}"><span class="c-en">${esc(c.en)}</span></button>`).join('')}
       </div>`);
+    Speech.sayThai(noParen(word.th).split('/')[0].trim());
   } else {
     lessonChrome(`
       <div class="q-card">
@@ -416,7 +418,10 @@ function renderQuestion() {
     Speech.say(word.en);
   }
 
-  $('#speak-btn')?.addEventListener('click', () => Speech.say(word.en));
+  const speakQuestion = type === 'th2en'
+    ? () => Speech.sayThai(noParen(word.th).split('/')[0].trim())
+    : () => Speech.say(word.en);
+  $('#speak-btn')?.addEventListener('click', speakQuestion);
   $$('.choice-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const chosen = q.choices[Number(btn.dataset.i)];
