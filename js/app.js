@@ -571,6 +571,14 @@ function openSettings() {
       <span class="grow">คำอ่านภาษาไทย 🗣️<span class="en-line">Thai pronunciation hints</span></span>
       <button class="toggle ${state.pron ? 'on' : ''}" id="set-pron" aria-label="toggle pronunciation"></button>
     </div>
+    <div class="sheet-row">
+      <span class="grow">สำรองความคืบหน้า 📦<span class="en-line">Backup progress (copy code)</span></span>
+      <button class="btn" id="set-export" style="padding:8px 16px;font-size:0.95rem">คัดลอก<span class="en-line">Copy</span></button>
+    </div>
+    <div class="sheet-row">
+      <span class="grow">กู้คืนความคืบหน้า 📥<span class="en-line">Restore progress (paste code)</span></span>
+      <button class="btn btn-blue" id="set-import" style="padding:8px 16px;font-size:0.95rem">วางโค้ด<span class="en-line">Paste</span></button>
+    </div>
     <button class="btn btn-big" id="set-done">เสร็จแล้ว ✓<span class="en-line">Done</span></button>
     <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
   </div>`;
@@ -589,6 +597,30 @@ function openSettings() {
     e.target.classList.toggle('on', state.pron);
     save();
   });
+  $('#set-export', backdrop).addEventListener('click', async () => {
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    try {
+      await navigator.clipboard.writeText(code);
+      toast('📦', 'คัดลอกโค้ดแล้ว! เอาไปวางในอีกเครื่องได้เลย', 'Code copied — paste it on the other device');
+    } catch (e) {
+      prompt('คัดลอกโค้ดนี้ · Copy this code:', code);
+    }
+  });
+  $('#set-import', backdrop).addEventListener('click', () => {
+    const code = prompt('วางโค้ดความคืบหน้าที่นี่ · Paste your progress code:');
+    if (!code) return;
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+      if (!data || typeof data.words !== 'object') throw new Error('bad code');
+      state = Object.assign(defaultState(), data);
+      save();
+      backdrop.remove();
+      toast('🎉', 'กู้คืนความคืบหน้าแล้ว!', 'Progress restored!');
+      renderHome();
+    } catch (e) {
+      toast('😵', 'โค้ดไม่ถูกต้อง ลองคัดลอกใหม่อีกครั้งนะ', "That code isn't valid — copy it again");
+    }
+  });
   $('#set-done', backdrop).addEventListener('click', close);
   $('#set-reset', backdrop).addEventListener('click', () => {
     if (confirm('แน่ใจไหม? ดาวและความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? All progress will be lost.')) {
@@ -601,8 +633,44 @@ function openSettings() {
 }
 
 // ═════════════════════════════════════════════════════════════
+// auto-update: home-screen apps have no refresh button, so poll
+// the server's index.html and offer a tap-to-update pill
+// ═════════════════════════════════════════════════════════════
+function currentVersion() {
+  const s = document.querySelector('script[src*="js/app.js"]');
+  const m = s && s.src.match(/[?&]v=(\d+)/);
+  return m ? Number(m[1]) : 0;
+}
+
+async function checkForUpdate() {
+  try {
+    const res = await fetch('index.html', { cache: 'no-store' });
+    if (!res.ok) return;
+    const html = await res.text();
+    const m = html.match(/js\/app\.js\?v=(\d+)/);
+    if (m && Number(m[1]) > currentVersion()) showUpdatePill();
+  } catch (e) { /* offline — try again next time */ }
+}
+
+function showUpdatePill() {
+  if ($('#update-pill')) return;
+  const pill = document.createElement('button');
+  pill.id = 'update-pill';
+  pill.className = 'update-pill';
+  pill.innerHTML = `🎁 มีเวอร์ชันใหม่! แตะเพื่ออัปเดต<span class="en-line">New version — tap to update</span>`;
+  pill.addEventListener('click', () => location.reload());
+  document.body.appendChild(pill);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') checkForUpdate();
+});
+
+// ═════════════════════════════════════════════════════════════
 // boot
 // ═════════════════════════════════════════════════════════════
 Speech.init();
+if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
 if (state.name) renderHome();
 else renderWelcome();
+checkForUpdate();
