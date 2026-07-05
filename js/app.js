@@ -525,6 +525,7 @@ function renderSentenceQuestion(q) {
     const built = q.answer.map((i) => q.tiles[i]).join(' ');
     const correct = built.toLowerCase() === s.en.toLowerCase();
     checkBtn.disabled = true;
+    $$('.tile').forEach((b) => { b.disabled = true; });
     Speech.say(s.en);
     answerSentence(q, correct);
   });
@@ -588,9 +589,11 @@ function showFeedback(correct, item) {
     <div class="feedback-inner">
       <div class="feedback-mascot">${mascotSVG({ mood: correct ? 'cheer' : 'oops', accessories: state.acc, size: 62 })}</div>
       <div class="feedback-msg">${correct ? '💚' : '💪'} ${th}<span class="en-line">${en}</span>${answerLine}</div>
+      <button class="icon-btn" id="fb-speak" aria-label="ฟังอีกครั้ง listen again">🔊</button>
       <button class="btn ${correct ? 'btn-mint' : ''}" id="next-btn">ต่อไป<span class="en-line">Next</span></button>
     </div>`;
   requestAnimationFrame(() => bar.classList.add('show'));
+  $('#fb-speak').addEventListener('click', () => Speech.say(item.en));
   $('.progress-fill').style.width = ((session.index + 1) / session.questions.length) * 100 + '%';
   const scoreChip = $('.chip-score');
   if (scoreChip) scoreChip.textContent = `✓ ${session.correct}`;

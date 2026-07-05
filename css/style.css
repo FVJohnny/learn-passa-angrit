@@ -524,6 +524,8 @@ body::before {
 .tile:active { transform: translateY(3px); box-shadow: 0 1px 0 #f0e2d3; }
 .tile.in-answer { background: var(--blue-soft); border-color: var(--blue); box-shadow: 0 4px 0 var(--blue); }
 .tile.ghost-slot { opacity: 0.35; pointer-events: none; background: #f3e9dd; color: transparent; border-style: dashed; box-shadow: none; }
+.tile:disabled { cursor: default; }
+.feedback-inner .icon-btn { flex-shrink: 0; }
 
 /* feedback bar */
 .feedback-bar {
