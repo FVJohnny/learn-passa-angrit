@@ -6,7 +6,7 @@ the browser's localStorage.
 
 ## Features
 
-- **Level 1 — Words**: 430+ words across 32 themed packs (greetings, food, animals,
+- **Level 1 — Words**: 620+ words across 32 themed packs (greetings, food, animals,
   family, verbs, feelings…). Each word has English, Thai, a Thai-script
   pronunciation hint (แคท-style), an emoji picture, and tap-to-hear audio.
 - **Level 2 — Tiny sentences**: word-tile sentence building, unlocked at 80

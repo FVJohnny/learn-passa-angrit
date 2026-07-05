@@ -316,11 +316,10 @@ let session = null;
 
 function questionForWord(word, pack) {
   const id = `${pack.id}:${word.en}`;
-  const stat = wstat(id);
-  // brand-new words teach with the picture; known words get quizzed
-  const type = stat.c === 0 ? 'en2th' : pick(['en2th', 'th2en', 'listen']);
+  // 50/50 coin flip between the two directions, from the first encounter
+  const type = Math.random() < 0.5 ? 'en2th' : 'th2en';
   const others = sample(pack.words.filter((w) => w.en !== word.en), 3);
-  return { kind: 'word', type, word, pack, id, choices: shuffle([word, ...others]), isNew: stat.c === 0 };
+  return { kind: 'word', type, word, pack, id, choices: shuffle([word, ...others]) };
 }
 
 function startWordLesson(pack) {
@@ -339,7 +338,11 @@ function startWordLesson(pack) {
 function startSentenceLesson(pack) {
   session = {
     mode: 'sentences', pack,
-    questions: shuffle(pack.sentences).map((s) => ({ kind: 'sentence', sentence: s, pack })),
+    questions: shuffle(pack.sentences).map((s) => ({
+      kind: 'sentence', sentence: s, pack,
+      // build the English from a Thai prompt, or the Thai from an English one
+      dir: s.thTiles && Math.random() < 0.5 ? 'en2th' : 'th2en',
+    })),
     index: 0, correct: 0,
   };
   renderQuestion();
@@ -378,9 +381,7 @@ function renderQuestion() {
   if (type === 'en2th') {
     lessonChrome(`
       <div class="q-card">
-        <div class="q-prompt">${q.isNew
-          ? '✨ คำใหม่! แปลว่าอะไรนะ? · New word — take a guess!'
-          : 'คำนี้แปลว่าอะไร? · What does this mean?'}</div>
+        <div class="q-prompt">คำนี้แปลว่าอะไร? · What does this mean?</div>
         <div class="q-word-en">${esc(word.en)}</div>
         ${pron}
         <button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button>
@@ -390,7 +391,7 @@ function renderQuestion() {
           <button class="choice-btn" data-i="${i}">${esc(noParen(c.th))}</button>`).join('')}
       </div>`);
     Speech.say(word.en);
-  } else if (type === 'th2en') {
+  } else {
     lessonChrome(`
       <div class="q-card">
         <div class="q-prompt">ภาษาอังกฤษพูดว่าอย่างไร? · How do you say it in English?</div>
@@ -403,19 +404,6 @@ function renderQuestion() {
           <button class="choice-btn" data-i="${i}"><span class="c-en">${esc(c.en)}</span></button>`).join('')}
       </div>`);
     Speech.sayThai(noParen(word.th).split('/')[0].trim());
-  } else {
-    lessonChrome(`
-      <div class="q-card">
-        <div class="q-prompt">ฟังแล้วเลือกคำที่ได้ยิน · Listen and choose</div>
-        <button class="speak-btn big speaking" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button>
-      </div>
-      <div class="choices grid-2">
-        ${q.choices.map((c, i) => `
-          <button class="choice-btn" data-i="${i}">
-            <span class="c-emoji">${c.emoji}</span>${esc(c.th)}
-          </button>`).join('')}
-      </div>`);
-    Speech.say(word.en);
   }
 
   const speakQuestion = type === 'th2en'
@@ -440,22 +428,36 @@ function renderQuestion() {
 
 function renderSentenceQuestion(q) {
   const s = q.sentence;
-  const tiles = shuffle([...s.en.split(' '), ...s.extra]);
+  const en2th = q.dir === 'en2th';
+  const tiles = en2th
+    ? shuffle([...s.thTiles, ...s.thExtra])
+    : shuffle([...s.en.split(' '), ...s.extra]);
   q.answer = [];
   q.tiles = tiles;
+  const speakPrompt = en2th
+    ? () => Speech.say(s.en)
+    : () => Speech.sayThai(s.th);
 
   lessonChrome(`
     <div class="q-card">
-      <div class="q-prompt">เรียงคำให้เป็นประโยค · Build the sentence</div>
-      <div class="q-word-th" style="font-size:1.4rem">${esc(s.th)}</div>
+      <div class="q-prompt">${en2th
+        ? 'เรียงคำเป็นภาษาไทย · Build it in Thai'
+        : 'เรียงคำเป็นประโยคภาษาอังกฤษ · Build it in English'}</div>
+      ${en2th
+        ? `<div class="q-word-en" style="font-size:1.6rem">${esc(s.en)}</div>`
+        : `<div class="q-word-th" style="font-size:1.4rem">${esc(s.th)}</div>`}
+      <div><button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button></div>
     </div>
     <div class="tile-answer" id="tile-answer"></div>
     <div class="tile-bank" id="tile-bank">
-      ${tiles.map((t, i) => `<button class="tile" data-i="${i}">${esc(t)}</button>`).join('')}
+      ${tiles.map((t, i) => `<button class="tile ${en2th ? 'th-tile' : ''}" data-i="${i}">${esc(t)}</button>`).join('')}
     </div>
     <div style="margin-top:22px">
       <button class="btn btn-mint btn-big" id="check-btn" disabled>ตรวจคำตอบ ✓<span class="en-line">Check</span></button>
     </div>`);
+
+  speakPrompt();
+  $('#speak-btn').addEventListener('click', speakPrompt);
 
   const answerEl = $('#tile-answer');
   const checkBtn = $('#check-btn');
@@ -470,7 +472,7 @@ function renderSentenceQuestion(q) {
       q.answer.push(i);
       tile.classList.add('ghost-slot');
       const t = document.createElement('button');
-      t.className = 'tile in-answer';
+      t.className = `tile in-answer ${en2th ? 'th-tile' : ''}`;
       t.textContent = q.tiles[i];
       t.dataset.i = i;
       t.addEventListener('click', () => {
@@ -486,8 +488,10 @@ function renderSentenceQuestion(q) {
   });
 
   checkBtn.addEventListener('click', () => {
-    const built = q.answer.map((i) => q.tiles[i]).join(' ');
-    const correct = built.toLowerCase() === s.en.toLowerCase();
+    // Thai tiles join without spaces; English tiles join with them
+    const built = q.answer.map((i) => q.tiles[i]).join(en2th ? '' : ' ');
+    const target = en2th ? s.th.replace(/\s+/g, '') : s.en;
+    const correct = built.toLowerCase() === target.toLowerCase();
     checkBtn.disabled = true;
     $$('.tile').forEach((b) => { b.disabled = true; });
     Speech.say(s.en);
@@ -731,6 +735,16 @@ Speech.init();
 if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
 if (state.name) renderHome();
 else renderWelcome();
+
+// the reload-guard flag survives the update reload — if it matches the
+// version now running, the update just landed: tell the user
+try {
+  if (Number(sessionStorage.getItem('updated-to')) === currentVersion()) {
+    sessionStorage.removeItem('updated-to');
+    toast('🎁', `อัปเดตแล้ว! เวอร์ชัน ${currentVersion()}`, `Updated to version ${currentVersion()}`);
+  }
+} catch (e) {}
+
 checkForUpdate();
 
 // if IndexedDB has newer progress than localStorage (e.g. localStorage was

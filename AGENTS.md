@@ -44,8 +44,8 @@ no refresh button — receive updates.
 | `js/app.js` | State, screens, lessons, streak/goal/stars logic |
 | `js/mascot.js` | Banana SVG generator (`mascotSVG`) with per-mood faces |
 | `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Sfx` (WebAudio tones) |
-| `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (32 packs, ~430 words) |
-| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building |
+| `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (32 packs, ~620 words) |
+| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building (8 packs, 80 sentences, both directions) |
 
 ## Product rules (learned from the owner — do not regress)
 
@@ -58,8 +58,8 @@ no refresh button — receive updates.
    - en→th questions show **no emoji**;
    - parenthetical hints like "หนึ่ง (1)" are stripped from choice buttons
      (`noParen()` in app.js);
-   - emojis are fine on th→en questions and listening choices (choices are
-     English/audio, so the picture can't reveal them).
+   - emojis are fine on th→en questions (choices are English words, so the
+     picture can't reveal them).
 3. **Failure is loud but kind**: wrong answers are *unmistakable* — buzzer
    sound, the question card turns red and shakes — but the copy stays
    encouraging and there are no hearts/lives. A missed word stays unmastered,
@@ -78,16 +78,19 @@ Word packs (`data/words.js`):
   words: [ { en: 'red', th: 'สีแดง', pron: 'เรด', emoji: '❤️' }, ... ] }
 ```
 
-- **Emojis must be unique within a pack** (they're used as listening-answer
-  choices). Cross-pack duplicates are fine.
+- **Emojis must be unique within a pack** (they appear as answer choices).
+  Cross-pack duplicates are fine.
 - `en` must be unique within a pack (word ids are `packId:en`).
-- Packs need ≥8 words so multiple-choice pools work; aim for 10–16.
+- Packs need ≥8 words so multiple-choice pools work; aim for 15–22.
 - Keep vocabulary relevant to Thai daily life (tuk-tuk, sticky rice, temple…).
 
-Sentence packs (`data/sentences.js`): `{ en, th, extra: [distractor tiles] }` —
-distractors must NOT appear in the sentence itself (would create ambiguity).
-Use natural contractions where the full form sounds stiff — "don't", never
-"do not". A contraction is a single tile (tiles split on spaces).
+Sentence packs (`data/sentences.js`):
+`{ en, th, extra: [en distractors], thTiles: [th word tiles], thExtra: [th distractors] }`
+- `thTiles.join('')` must equal `th` with spaces removed (Thai has no spaces,
+  so tiles are pre-tokenized by hand).
+- Distractors must NOT appear among that sentence's tiles (ambiguity).
+- Use natural contractions where the full form sounds stiff — "don't", never
+  "do not". A contraction is a single tile (English tiles split on spaces).
 
 ## Game mechanics (all in `js/app.js` constants)
 
@@ -96,6 +99,11 @@ Use natural contractions where the full form sounds stiff — "don't", never
 - A session asks **all not-yet-mastered words** of the pack, shuffled. Every
   answer is saved immediately, so quitting mid-session keeps progress. A
   fully-mastered pack replays all of its words.
+- Every question is a 50/50 coin flip between the two directions — en→th
+  (English shown and spoken, pick the Thai) and th→en (Thai shown and spoken
+  with the Thai voice, pick the English). Sentence questions flip the same way:
+  build the English from a Thai prompt or the Thai from an English prompt.
+  The correct answer is spoken in English after answering.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
 - Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned content: articles,
