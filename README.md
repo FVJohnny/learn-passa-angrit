@@ -22,10 +22,11 @@ the browser's localStorage.
 
 ## Running
 
-It's a plain static site — no build step. Open `index.html` or serve the folder:
+It's a plain static site — no build step:
 
 ```sh
-python3 -m http.server 8000
+./dev.sh          # local server on :8000, no caching, LAN URL for phone testing
+./dev.sh 3000     # custom port
 ```
 
 ## Adding content

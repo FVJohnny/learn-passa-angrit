@@ -97,7 +97,10 @@ distractors must NOT appear in the sentence itself (would create ambiguity).
 
 ## Testing / verification
 
-- No build, no deps: `python3 -m http.server 8000` and open the browser.
+- Local dev: `./dev.sh` — serves at http://localhost:8000 with caching disabled
+  (plain refresh shows edits; no ?v= bump needed locally) and prints a LAN URL
+  for testing on a real phone. Test locally BEFORE pushing to main — every push
+  deploys to the live site the owner's girlfriend uses daily.
 - Syntax check: `node --check js/*.js data/*.js`.
 - Data integrity (dup emojis/ids, distractor ambiguity) — there's no committed
   test script; validate manually or eval the data files in node.
