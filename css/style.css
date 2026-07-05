@@ -60,9 +60,6 @@ body::before {
 .blob-1 { width: 320px; height: 320px; background: var(--pink-soft); top: -80px; right: -100px; animation: drift 16s ease-in-out infinite; }
 .blob-2 { width: 280px; height: 280px; background: var(--mint-soft); bottom: 10%; left: -120px; animation: drift 20s ease-in-out infinite reverse; }
 .blob-3 { width: 240px; height: 240px; background: var(--butter-soft); top: 40%; right: -80px; animation: drift 24s ease-in-out infinite; }
-.cloud { position: absolute; font-size: 34px; opacity: 0.55; animation: floaty 7s ease-in-out infinite; }
-.cloud-1 { top: 8%; left: 6%; animation-delay: 0s; }
-.cloud-2 { top: 22%; right: 10%; font-size: 26px; animation-delay: -2.5s; }
 
 @keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(24px, -18px) scale(1.08); } }
 @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
