@@ -12,8 +12,7 @@ step, no framework. All progress lives in localStorage.
 - **Live site**: https://fvjohnny.github.io/learn-passa-angrit/
 - **Hosting**: GitHub Pages, legacy build from `main` branch root. Pushing to
   `main` deploys automatically (~1 minute).
-- **Mascot**: a baby **banana** named กล้วยน้อย / Gluay Noi (it was briefly an
-  elephant; the owner chose banana — do not change it back).
+- **Mascot**: a baby **banana** named กล้วยน้อย / Gluay Noi.
 
 ## ⚠️ Rule #1: bump the cache version on every deploy
 
@@ -54,10 +53,10 @@ running the old code and bug fixes silently don't reach them. Docs-only changes
      (`noParen()` in app.js);
    - emojis are fine on th→en questions and listening choices (choices are
      English/audio, so the picture can't reveal them).
-3. **Failure is loud but kind**: wrong answers must be *unmistakable* — buzzer
-   sound, the question card turns red and shakes (owner request) — but the copy
-   stays encouraging and there are no hearts/lives. The word goes to the review
-   queue.
+3. **Failure is loud but kind**: wrong answers are *unmistakable* — buzzer
+   sound, the question card turns red and shakes — but the copy stays
+   encouraging and there are no hearts/lives. A missed word stays unmastered,
+   so it automatically reappears in the pack's next session.
 4. **Sounds must work on phone speakers**: use triangle waves, not low sines
    (low-frequency sine is inaudible on tiny speakers).
 5. **Pronunciation hints** are Thai-script transliterations (`pron` field,
@@ -83,20 +82,20 @@ distractors must NOT appear in the sentence itself (would create ambiguity).
 
 ## Game mechanics (all in `js/app.js` constants)
 
-- Word **mastered** after 1 correct answer (`MASTER_AT` — the owner explicitly
-  wants it this way; don't raise it back to 3).
-- A session covers **all not-yet-mastered words** of the pack (owner request —
-  not a random subset). Quitting mid-session keeps every answer already given.
-  A fully-mastered pack replays all of its words.
-- **There are NO stars and NO review queue** — the owner had both removed.
-  Don't reintroduce them. Progression is mastery-only:
-  - a pack unlocks when the **previous pack is fully mastered**;
-  - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`);
-  - accessories unlock at 25/60/100/160/230/320 mastered words (`ACCESSORIES`).
+- A word is **mastered** after 1 correct answer (`MASTER_AT`). Mastery is the
+  single progression currency — everything below derives from it.
+- A session asks **all not-yet-mastered words** of the pack, shuffled. Every
+  answer is saved immediately, so quitting mid-session keeps progress. A
+  fully-mastered pack replays all of its words.
+- A pack unlocks when the **previous pack is fully mastered**.
+- **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
+- Accessories unlock at 25/60/100/160/230/320 mastered words (`ACCESSORIES`).
 - Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned content: articles,
   plurals, is/am/are (classic Thai-speaker pain points).
 - Daily goal = 20 answers (`DAILY_GOAL`); streak = consecutive days with a
   completed session.
+- Lessons show a live ✓ correct-count chip next to the question counter;
+  results celebrate at ≥80% (confetti) and offer "try again" below that.
 - localStorage key: **`gluaynoi-v1`** — schema in `defaultState()`. Never wipe or
   rename it casually: it holds her streak and all progress. If you must migrate
   the schema, write a migration from the old key.
