@@ -79,6 +79,8 @@ Word packs (`data/words.js`):
 
 Sentence packs (`data/sentences.js`): `{ en, th, extra: [distractor tiles] }` —
 distractors must NOT appear in the sentence itself (would create ambiguity).
+Use natural contractions where the full form sounds stiff — "don't", never
+"do not". A contraction is a single tile (tiles split on spaces).
 
 ## Game mechanics (all in `js/app.js` constants)
 
