@@ -68,10 +68,11 @@ const Sfx = {
   },
 
   wrong() {
-    // triangle waves carry on small phone speakers where low sines vanish
-    this.tone(370, 0, 0.16, { type: 'triangle', gain: 0.25 });
-    this.tone(277, 0.14, 0.38, { type: 'triangle', gain: 0.25 });
-    if (navigator.vibrate) navigator.vibrate(90);
+    // harsh double buzzer — unmistakably "wrong", still audible on tiny speakers
+    this.tone(160, 0, 0.22, { type: 'sawtooth', gain: 0.3 });
+    this.tone(210, 0, 0.22, { type: 'square', gain: 0.1 });
+    this.tone(110, 0.24, 0.4, { type: 'sawtooth', gain: 0.3 });
+    if (navigator.vibrate) navigator.vibrate([90, 60, 140]);
   },
 
   pop() {

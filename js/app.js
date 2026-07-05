@@ -584,6 +584,7 @@ function showFeedback(correct, item) {
   const bar = $('#feedback-bar');
   const [th, en] = correct ? pick(PRAISE) : pick(CHEER_UP);
   const answerLine = `<div class="fb-answer"><span class="fb-en">${esc(item.en)}</span> = ${esc(item.th)}${state.pron && item.pron ? ` · 🗣️ ${item.pron}` : ''}</div>`;
+  if (!correct) $('.q-card')?.classList.add('q-wrong');
   bar.className = `feedback-bar ${correct ? 'good' : 'bad'}`;
   bar.innerHTML = `
     <div class="feedback-inner">

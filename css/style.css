@@ -496,6 +496,23 @@ body::before {
   75% { transform: translateX(-3px); }
 }
 
+/* wrong answer: the whole question card flashes red and shakes hard */
+.q-card.q-wrong {
+  border-color: var(--red-deep);
+  background: #ffeaea;
+  box-shadow: 0 6px 20px rgba(239, 137, 137, 0.35);
+  animation: shake-hard 0.55s;
+}
+@keyframes shake-hard {
+  0%, 100% { transform: translateX(0); }
+  12% { transform: translateX(-12px) rotate(-1deg); }
+  28% { transform: translateX(11px) rotate(1deg); }
+  44% { transform: translateX(-9px); }
+  60% { transform: translateX(8px); }
+  76% { transform: translateX(-5px); }
+  88% { transform: translateX(3px); }
+}
+
 /* sentence builder */
 .tile-answer {
   min-height: 62px;

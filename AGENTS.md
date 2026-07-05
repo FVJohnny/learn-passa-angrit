@@ -54,8 +54,10 @@ running the old code and bug fixes silently don't reach them. Docs-only changes
      (`noParen()` in app.js);
    - emojis are fine on th→en questions and listening choices (choices are
      English/audio, so the picture can't reveal them).
-3. **Gentle failure**: wrong answers never shame — encouraging copy, soft womp
-   sound, word goes to the review queue. No hearts/lives.
+3. **Failure is loud but kind**: wrong answers must be *unmistakable* — buzzer
+   sound, the question card turns red and shakes (owner request) — but the copy
+   stays encouraging and there are no hearts/lives. The word goes to the review
+   queue.
 4. **Sounds must work on phone speakers**: use triangle waves, not low sines
    (low-frequency sine is inaudible on tiny speakers).
 5. **Pronunciation hints** are Thai-script transliterations (`pron` field,
