@@ -63,7 +63,6 @@ body::before {
 .cloud { position: absolute; font-size: 34px; opacity: 0.55; animation: floaty 7s ease-in-out infinite; }
 .cloud-1 { top: 8%; left: 6%; animation-delay: 0s; }
 .cloud-2 { top: 22%; right: 10%; font-size: 26px; animation-delay: -2.5s; }
-.cloud-3 { bottom: 12%; right: 6%; font-size: 30px; animation-delay: -5s; animation-duration: 9s; }
 
 @keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(24px, -18px) scale(1.08); } }
 @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
