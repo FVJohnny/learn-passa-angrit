@@ -85,7 +85,10 @@ distractors must NOT appear in the sentence itself (would create ambiguity).
 
 - Word **mastered** after 1 correct answer (`MASTER_AT` — the owner explicitly
   wants it this way; don't raise it back to 3).
-- Session = 10 questions; **≥80% earns the pack one star** (max 3 per pack).
+- A session covers **all not-yet-mastered words** of the pack (owner request —
+  not a random subset). Quitting mid-session keeps every answer already given.
+  A fully-mastered pack replays all of its words. **≥80% on a completed session
+  earns the pack one star** (max 3 per pack).
 - 1 star on a pack unlocks the next pack; **10 total stars unlock Level 2**
   (`LEVEL2_STARS`). Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned
   content: articles, plurals, is/am/are (classic Thai-speaker pain points).

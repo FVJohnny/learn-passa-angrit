@@ -9,7 +9,6 @@ const appEl = $('#app');
 const STORAGE_KEY = 'gluaynoi-v1';
 const DAILY_GOAL = 20;      // answers per day
 const MASTER_AT = 1;        // correct answers to master a word
-const SESSION_LEN = 10;     // questions per lesson
 const LEVEL2_STARS = 10;    // total stars to unlock sentences
 
 // ── word index: id = 'packId:en' ────────────────────────────
@@ -350,11 +349,10 @@ function questionForWord(word, pack) {
 }
 
 function startWordLesson(pack) {
-  const scored = shuffle(pack.words).sort((a, b) => {
-    const sa = wstat(`${pack.id}:${a.en}`), sb = wstat(`${pack.id}:${b.en}`);
-    return (sa.c >= MASTER_AT ? 1 : 0) - (sb.c >= MASTER_AT ? 1 : 0); // unmastered first
-  });
-  const words = scored.slice(0, SESSION_LEN);
+  // the session covers every word not yet mastered; quitting keeps progress,
+  // and a fully-mastered pack replays all of its words
+  const unmastered = pack.words.filter((w) => !isMastered(`${pack.id}:${w.en}`));
+  const words = unmastered.length ? unmastered : pack.words;
   session = {
     mode: 'words', pack,
     questions: shuffle(words).map((w) => questionForWord(w, pack)),
@@ -364,10 +362,9 @@ function startWordLesson(pack) {
 }
 
 function startReview() {
-  const ids = sample(reviewIds(), SESSION_LEN);
   session = {
     mode: 'review', pack: null,
-    questions: ids.map((id) => {
+    questions: shuffle(reviewIds()).map((id) => {
       const { word, pack } = WORDS_BY_ID[id];
       return questionForWord(word, pack);
     }),
@@ -377,10 +374,9 @@ function startReview() {
 }
 
 function startSentenceLesson(pack) {
-  const sentences = sample(pack.sentences, Math.min(8, pack.sentences.length));
   session = {
     mode: 'sentences', pack,
-    questions: sentences.map((s) => ({ kind: 'sentence', sentence: s, pack })),
+    questions: shuffle(pack.sentences).map((s) => ({ kind: 'sentence', sentence: s, pack })),
     index: 0, correct: 0,
   };
   renderQuestion();
