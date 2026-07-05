@@ -81,7 +81,8 @@ distractors must NOT appear in the sentence itself (would create ambiguity).
 
 ## Game mechanics (all in `js/app.js` constants)
 
-- Word **mastered** after 3 correct answers (`MASTER_AT`).
+- Word **mastered** after 1 correct answer (`MASTER_AT` — the owner explicitly
+  wants it this way; don't raise it back to 3).
 - Session = 10 questions; **≥80% earns the pack one star** (max 3 per pack).
 - 1 star on a pack unlocks the next pack; **10 total stars unlock Level 2**
   (`LEVEL2_STARS`). Level 3 is a locked "กำลังพัฒนา 🚧" placeholder — planned

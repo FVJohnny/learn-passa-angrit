@@ -8,7 +8,7 @@ const appEl = $('#app');
 
 const STORAGE_KEY = 'gluaynoi-v1';
 const DAILY_GOAL = 20;      // answers per day
-const MASTER_AT = 3;        // correct answers to master a word
+const MASTER_AT = 1;        // correct answers to master a word
 const SESSION_LEN = 10;     // questions per lesson
 const LEVEL2_STARS = 10;    // total stars to unlock sentences
 
