@@ -189,13 +189,13 @@ function goalRingHTML() {
   const frac = Math.min(1, d.count / DAILY_GOAL);
   const R = 19, C = 2 * Math.PI * R;
   return `
-  <div class="goal-ring ${frac >= 1 ? 'done' : ''}" title="เป้าหมายวันนี้ ${d.count}/${DAILY_GOAL}">
+  <div class="goal-ring ${frac >= 1 ? 'done' : ''}" id="goal-ring">
     <svg width="46" height="46">
       <circle class="ring-bg" cx="23" cy="23" r="${R}" stroke-width="5" fill="none"/>
       <circle class="ring-fill" cx="23" cy="23" r="${R}" stroke-width="5" fill="none"
         stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - frac)}"/>
     </svg>
-    <div class="ring-label">${frac >= 1 ? '🏆' : '🎯'}</div>
+    <div class="ring-label">${frac >= 1 ? '🏆' : `<span class="ring-num">${d.count}/${DAILY_GOAL}</span>`}</div>
   </div>`;
 }
 
@@ -282,6 +282,12 @@ function renderHome() {
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
+  $('#goal-ring').addEventListener('click', () => {
+    const d = dailyToday();
+    toast(d.count >= DAILY_GOAL ? '🏆' : '🎯',
+      `เป้าหมายวันนี้: ตอบคำถาม ${Math.min(d.count, DAILY_GOAL)}/${DAILY_GOAL} ข้อ`,
+      `Daily goal: ${Math.min(d.count, DAILY_GOAL)}/${DAILY_GOAL} answers`);
+  });
   $$('.pack-card').forEach((card) => {
     card.addEventListener('click', () => {
       if (card.dataset.locked) {
