@@ -609,6 +609,17 @@ body::before {
 @keyframes toast-in { from { transform: translateY(-80px) scale(0.8); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes toast-out { to { transform: translateY(-80px) scale(0.85); opacity: 0; } }
 
+/* ── version tag ─────────────────────────────────────────── */
+.version-tag {
+  text-align: center;
+  margin-top: 30px;
+  font-family: var(--font-en);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  opacity: 0.65;
+}
+
 /* ── small screens ───────────────────────────────────────── */
 @media (max-width: 460px) {
   .topbar .brand { font-size: 1.05rem; }

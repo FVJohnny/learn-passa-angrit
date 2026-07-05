@@ -288,6 +288,8 @@ function renderHome() {
       <span class="big-ico">🚧</span>
       <span>กำลังพัฒนา… เร็วๆ นี้!<span class="en-line">In progress… coming soon!</span></span>
     </div>
+
+    <div class="version-tag">เวอร์ชัน · version ${currentVersion()}</div>
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
