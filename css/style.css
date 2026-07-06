@@ -200,7 +200,9 @@ body::before {
 .speech-bubble .en-line { margin-top: 3px; }
 
 /* ── mascot svg animations ───────────────────────────────── */
-.mascot { display: block; }
+/* every mood idles: breathe (normal/sleep), bob (happy), hop (cheer/party),
+   sway (oops), tremble (surprised) — plus the leaf always sways */
+.mascot { display: block; transform-origin: 50% 92%; }
 .mascot .m-leaf { transform-origin: 106px 24px; animation: leaf-sway 4.5s ease-in-out infinite; }
 @keyframes leaf-sway { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-9deg); } 65% { transform: rotate(6deg); } }
 .mascot.mood-cheer { animation: hop 0.7s ease-in-out infinite; }
@@ -208,6 +210,13 @@ body::before {
 @keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px) rotate(-2deg); } 60% { transform: translateY(-10px) rotate(2deg); } }
 .mascot.mood-oops { animation: sway 2.2s ease-in-out infinite; }
 @keyframes sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+.mascot.mood-normal { animation: breathe 3.4s ease-in-out infinite; }
+.mascot.mood-sleep { animation: breathe 4.8s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, 0.97); } }
+.mascot.mood-happy { animation: bob 2.2s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-4px) rotate(-1.5deg); } 60% { transform: translateY(0) rotate(1.2deg); } }
+.mascot.mood-surprised { animation: tremble 0.4s ease-in-out infinite; }
+@keyframes tremble { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 .mascot .m-zzz { animation: zzz-float 2.4s ease-in-out infinite; opacity: 0; }
 .mascot .m-zzz.z2 { animation-delay: 0.8s; }
 .mascot .m-zzz.z3 { animation-delay: 1.6s; }
