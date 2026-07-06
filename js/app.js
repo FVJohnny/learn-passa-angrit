@@ -308,7 +308,7 @@ function packCardHTML(pack, list, index, isSentence) {
   let countHTML = '';
   if (!isSentence) {
     const m = masteredIn(pack);
-    countHTML = `<span class="pack-count">${done ? '✓ ครบแล้ว' : `${m}/${pack.words.length} คำ`}</span>`;
+    countHTML = `<span class="pack-count">${done ? `✓ ${pack.words.length}/${pack.words.length} คำ` : `${m}/${pack.words.length} คำ`}</span>`;
   } else {
     countHTML = `<span class="pack-count">${pack.sentences.length} ประโยค</span>`;
   }
