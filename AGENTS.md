@@ -67,7 +67,7 @@ no refresh button — receive updates.
 4. **Sounds must work on phone speakers**: use triangle waves, not low sines
    (low-frequency sine is inaudible on tiny speakers).
 5. **Pronunciation hints** are Thai-script transliterations (`pron` field,
-   e.g. cat → แคท). Toggleable in settings, on by default.
+   e.g. cat → แคท). Always shown; there is no setting for them.
 
 ## Content format
 

@@ -27,7 +27,6 @@ function defaultState() {
   return {
     name: '',
     avatar: '🍌',               // profile icon
-    pron: true,                 // show pronunciation hints
     words: {},                  // id -> {c, w}
     spacks: {},                 // sentence packId -> true once passed (≥80%)
     streak: { count: 0, last: '' },
@@ -518,7 +517,7 @@ function renderQuestion() {
   if (q.kind === 'sentence') return renderSentenceQuestion(q);
 
   const { type, word, pack } = q;
-  const pron = state.pron ? `<div><span class="q-pron">🗣️ ${word.pron}</span></div>` : '';
+  const pron = `<div><span class="q-pron">🗣️ ${word.pron}</span></div>`;
 
   if (type === 'listen') {
     // audio only — no English text, no pron hint (it would spell out the
@@ -701,7 +700,7 @@ const CHEER_UP = [
 function showFeedback(correct, item) {
   const bar = $('#feedback-bar');
   const [th, en] = correct ? pick(PRAISE) : pick(CHEER_UP);
-  const answerLine = `<div class="fb-answer"><span class="fb-en">${esc(item.en)}</span> = ${esc(item.th)}${state.pron && item.pron ? ` · 🗣️ ${item.pron}` : ''}</div>`;
+  const answerLine = `<div class="fb-answer"><span class="fb-en">${esc(item.en)}</span> = ${esc(item.th)}${item.pron ? ` · 🗣️ ${item.pron}` : ''}</div>`;
   if (!correct) $('.q-card')?.classList.add('q-wrong');
   bar.className = `feedback-bar ${correct ? 'good' : 'bad'}`;
   bar.innerHTML = `
@@ -789,10 +788,6 @@ function openSettings() {
       <span>ชื่อ<span class="en-line">Name</span></span>
       <input class="name-input grow" id="set-name" value="${esc(state.name)}" maxlength="20" style="padding:8px 12px;font-size:1rem" />
     </div>
-    <div class="sheet-row">
-      <span class="grow">คำอ่านภาษาไทย 🗣️<span class="en-line">Thai pronunciation hints</span></span>
-      <button class="toggle ${state.pron ? 'on' : ''}" id="set-pron" aria-label="toggle pronunciation"></button>
-    </div>
     <button class="btn btn-big" id="set-done">เสร็จแล้ว ✓<span class="en-line">Done</span></button>
     <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
   </div>`;
@@ -806,11 +801,6 @@ function openSettings() {
     backdrop.remove();
     renderHome();
   };
-  $('#set-pron', backdrop).addEventListener('click', (e) => {
-    state.pron = !state.pron;
-    e.target.classList.toggle('on', state.pron);
-    save();
-  });
   $('#set-done', backdrop).addEventListener('click', close);
   $('#set-reset', backdrop).addEventListener('click', () => {
     if (confirm('แน่ใจไหม? โปรไฟล์นี้และความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? This profile and all its progress will be deleted.')) {
