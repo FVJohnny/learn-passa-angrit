@@ -9,7 +9,8 @@ const appEl = $('#app');
 const STORAGE_KEY = 'gluaynoi-v1';
 const MASTER_AT = 1;        // correct answers to master a word
 const LEVEL2_WORDS = 80;    // mastered words to unlock sentences
-const LEVEL3_WORDS = 150;   // mastered words to unlock longer sentences
+const SPACK_PASS = 0.8;     // session score that marks a sentence pack passed
+                            // Level 3 unlocks by passing every Level 2 pack
 
 // ── word index: id = 'packId:en' ────────────────────────────
 const WORDS_BY_ID = {};
@@ -28,6 +29,7 @@ function defaultState() {
     avatar: '🍌',               // profile icon
     pron: true,                 // show pronunciation hints
     words: {},                  // id -> {c, w}
+    spacks: {},                 // sentence packId -> true once passed (≥80%)
     streak: { count: 0, last: '' },
     unlockAll: false,           // tester mode: every pack open
   };
@@ -143,6 +145,8 @@ const masteredTotal = () =>
 const masteredOf = (profile) =>
   Object.keys(profile.words || {}).filter((id) => WORDS_BY_ID[id] && (profile.words[id].c || 0) >= MASTER_AT).length;
 const packDone = (pack) => masteredIn(pack) === pack.words.length;
+// older profiles predate `spacks` — guard the access
+const spackPassed = (id) => !!(state.spacks && state.spacks[id]);
 
 function streakCurrent() {
   const { count, last } = state.streak;
@@ -304,13 +308,13 @@ function renderWelcome() {
 // ═════════════════════════════════════════════════════════════
 function packCardHTML(pack, list, index, isSentence) {
   const unlocked = packUnlocked(list, index, isSentence);
-  const done = !isSentence && packDone(pack);
+  const done = isSentence ? spackPassed(pack.id) : packDone(pack);
   let countHTML = '';
   if (!isSentence) {
     const m = masteredIn(pack);
     countHTML = `<span class="pack-count">${done ? `✓ ${pack.words.length}/${pack.words.length} คำ` : `${m}/${pack.words.length} คำ`}</span>`;
   } else {
-    countHTML = `<span class="pack-count">${pack.sentences.length} ประโยค</span>`;
+    countHTML = `<span class="pack-count">${done ? '✓ ' : ''}${pack.sentences.length} ประโยค</span>`;
   }
   return `
   <div class="pack-card ${unlocked ? '' : 'locked'} ${done ? 'done' : ''}"
@@ -331,7 +335,8 @@ function renderHome() {
   const streak = streakCurrent();
   const l1done = WORD_PACKS.filter(packDone).length;
   const l2open = state.unlockAll || mw >= LEVEL2_WORDS;
-  const l3open = state.unlockAll || mw >= LEVEL3_WORDS;
+  const l2passed = SENTENCE_PACKS.filter((p) => spackPassed(p.id)).length;
+  const l3open = state.unlockAll || l2passed === SENTENCE_PACKS.length;
 
   appEl.innerHTML = `
   <div class="screen">
@@ -386,8 +391,8 @@ function renderHome() {
     </div>` : `
     <div class="level-locked-note">
       <span class="big-ico">🔒</span>
-      <span>เรียนรู้คำศัพท์ ${LEVEL3_WORDS} คำเพื่อปลดล็อคระดับ 3 (ตอนนี้จำได้ ${mw} คำ)
-        <span class="en-line">Learn ${LEVEL3_WORDS} words to unlock Level 3</span>
+      <span>ทำแพ็คระดับ 2 ให้ผ่านอีก <b>${SENTENCE_PACKS.length - l2passed}</b> แพ็คเพื่อปลดล็อคระดับ 3 (ผ่านแล้ว ${l2passed}/${SENTENCE_PACKS.length})
+        <span class="en-line">Pass ${SENTENCE_PACKS.length - l2passed} more Level 2 packs to unlock Level 3</span>
       </span>
     </div>`}
 
@@ -720,10 +725,13 @@ function markStreak() {
 function renderResults() {
   const total = session.questions.length;
   const pct = session.correct / total;
-  const passed = pct >= 0.8;
+  const passed = pct >= SPACK_PASS;
   const newMastered = session.mode === 'words'
     ? masteredIn(session.pack) - session.masteredBefore : 0;
 
+  if (session.mode === 'sentences' && passed) {
+    (state.spacks = state.spacks || {})[session.pack.id] = true;
+  }
   markStreak();
   save();
 

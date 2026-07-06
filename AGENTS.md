@@ -109,9 +109,12 @@ Sentence packs (`data/sentences.js`):
   correct answer is spoken in English after answering.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
-- **Level 3 unlocks at 150 total mastered words** (`LEVEL3_WORDS`) — longer
-  sentence packs in `SENTENCE_PACKS_L3` (6-9 word sentences: before/after,
-  will, because, when clauses).
+- A sentence pack is **passed** once a session ends with a score ≥80%
+  (`SPACK_PASS`); passes are stored per profile in `state.spacks`
+  (packId → true) and shown as a ✓ on the pack card.
+- **Level 3 unlocks when every Level 2 pack is passed** — longer sentence
+  packs in `SENTENCE_PACKS_L3` (6-9 word sentences: before/after, will,
+  because, when clauses).
 - Streak = consecutive days with a completed session.
 - Lessons show a live ✓ correct-count chip next to the question counter;
   results celebrate at ≥80% (confetti) and offer "try again" below that.
