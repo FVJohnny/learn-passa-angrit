@@ -12,7 +12,8 @@ step, no framework. All progress lives in localStorage.
 - **Live site**: https://fvjohnny.github.io/learn-passa-angrit/
 - **Hosting**: GitHub Pages, legacy build from `main` branch root. Pushing to
   `main` deploys automatically (~1 minute).
-- **Mascot**: a baby **banana** named กล้วยน้อย / Gluay Noi.
+- **Mascot**: a baby **banana** named กล้วยน้อย (Gluay Noi) — shown in
+  user-facing English text as **Little Banana**.
 
 ## ⚠️ Rule #1: bump the cache version on every deploy
 

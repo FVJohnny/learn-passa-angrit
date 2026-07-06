@@ -203,7 +203,7 @@ function greeting() {
     ...pick([
       { th: `สู้ๆ นะ ${name}! วันนี้เรียนต่ออีกนิดนะ`, en: 'Keep going! A little more today!' },
       { th: `${name} เก่งมากเลย เรียนต่อกันเถอะ!`, en: "You're doing great — let's continue!" },
-      { th: `กล้วยน้อยเชื่อใน ${name} นะ!`, en: 'Gluay Noi believes in you!' },
+      { th: `กล้วยน้อยเชื่อใน ${name} นะ!`, en: 'Little Banana believes in you!' },
     ]),
   };
 }
@@ -255,11 +255,11 @@ function renderWelcome() {
   <div class="screen welcome-wrap">
     <div>${mascotSVG({ mood: 'happy', size: 170 })}</div>
     <h1 class="app-title">กล้วยน้อย
-      <span class="en-line">Gluay Noi · Learn English</span>
+      <span class="en-line">Little Banana · Learn English</span>
     </h1>
     <div class="welcome-card">
       <div class="hello-q">สวัสดีจ้า! เราชื่อ “กล้วยน้อย” 🍌<br>เธอชื่ออะไรจ๊ะ?
-        <span class="en-line">Hi! I'm Gluay Noi. What's your name?</span>
+        <span class="en-line">Hi! I'm Little Banana. What's your name?</span>
       </div>
       <input class="name-input" id="name-input" maxlength="20"
         placeholder="ชื่อเล่น · nickname" autocomplete="off" />
