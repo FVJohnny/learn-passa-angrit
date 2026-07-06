@@ -44,8 +44,8 @@ no refresh button — receive updates.
 | `js/app.js` | State, screens, lessons, streak/goal/stars logic |
 | `js/mascot.js` | Banana SVG generator (`mascotSVG`) with per-mood faces |
 | `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Sfx` (WebAudio tones) |
-| `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (32 packs, ~620 words) |
-| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building + `SENTENCE_PACKS_L3` (18 packs, 180 sentences, both directions) |
+| `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (34 packs, ~650 words) |
+| `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building + `SENTENCE_PACKS_L3` (20 packs, 200 sentences, both directions) |
 
 ## Product rules (learned from the owner — do not regress)
 
