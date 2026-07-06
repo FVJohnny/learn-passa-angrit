@@ -455,6 +455,32 @@ body::before {
   transition: transform 0.15s;
 }
 .reveal-btn:active { transform: scale(0.92); }
+
+/* ── speaking questions ──────────────────────────────────── */
+.mic-zone {
+  margin-top: 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.mic-btn {
+  width: 92px; height: 92px;
+  border-radius: 50%;
+  border: 3px solid var(--pink-deep);
+  background: var(--pink-soft);
+  font-size: 2.4rem;
+  cursor: pointer;
+  display: grid; place-items: center;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s;
+}
+.mic-btn:active { transform: scale(0.9); }
+.mic-btn.listening { background: var(--pink); animation: mic-pulse 1s ease-in-out infinite; }
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 125, 160, 0.55); }
+  50% { box-shadow: 0 0 0 16px rgba(248, 125, 160, 0); }
+}
+.mic-hint { font-weight: 700; color: var(--ink-soft); text-align: center; }
+.mic-out { min-height: 1.4em; font-family: var(--font-en); font-weight: 700; color: var(--ink); }
+.self-judge { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .speak-btn.speaking { animation: pulse-speak 0.9s ease-in-out infinite; }
 @keyframes pulse-speak {
   0%, 100% { box-shadow: 0 0 0 0 rgba(111, 181, 240, 0.5); }

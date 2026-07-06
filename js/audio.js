@@ -58,6 +58,53 @@ const Speech = {
   },
 };
 
+// การจดจำเสียง — speech recognition for speaking questions.
+// NOT available inside iOS home-screen apps (only in a real Safari tab) —
+// callers check .available and fall back to self-judged speaking practice.
+const Recog = {
+  SR: window.SpeechRecognition || window.webkitSpeechRecognition || null,
+  active: null,
+
+  get available() { return !!this.SR; },
+
+  // listen once; resolves with an array of candidate transcripts
+  // (lowercased), [] when nothing was heard, or null when the mic is
+  // unusable (permission denied, no service) so the UI can fall back
+  listen({ onInterim } = {}) {
+    return new Promise((resolve) => {
+      if (!this.SR) return resolve(null);
+      this.stop();
+      const r = new this.SR();
+      this.active = r;
+      r.lang = 'en-US';
+      r.interimResults = true;
+      r.maxAlternatives = 5;
+      let finals = [];
+      r.onresult = (e) => {
+        const res = e.results[e.results.length - 1];
+        if (res.isFinal) {
+          finals = [...res].map((alt) => alt.transcript.toLowerCase().trim());
+        } else if (onInterim) {
+          onInterim(res[0].transcript);
+        }
+      };
+      r.onerror = (e) => {
+        this.active = null;
+        resolve(e.error === 'no-speech' || e.error === 'aborted' ? [] : null);
+      };
+      r.onend = () => { this.active = null; resolve(finals); };
+      try { r.start(); } catch (err) { this.active = null; resolve(null); }
+    });
+  },
+
+  stop() {
+    if (this.active) {
+      try { this.active.abort(); } catch (e) {}
+      this.active = null;
+    }
+  },
+};
+
 const Sfx = {
   ctx: null,
 

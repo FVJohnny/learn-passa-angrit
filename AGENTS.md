@@ -46,7 +46,7 @@ refresh button — receive updates.
 | `css/style.css` | Entire design system (pastel theme, CSS variables at top) |
 | `js/app.js` | State, screens, lessons, streak/goal/stars logic |
 | `js/mascot.js` | Banana SVG generator (`mascotSVG`) with per-mood faces |
-| `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Sfx` (WebAudio tones) |
+| `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Recog` (SpeechRecognition wrapper) + `Sfx` (WebAudio tones) |
 | `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (34 packs, ~650 words) |
 | `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building + `SENTENCE_PACKS_L3` (20 packs, 200 sentences, both directions) |
 
@@ -102,14 +102,24 @@ Sentence packs (`data/sentences.js`):
 - A session asks **all not-yet-mastered words** of the pack, shuffled. Every
   answer is saved immediately, so quitting mid-session keeps progress. A
   fully-mastered pack replays all of its words.
-- Every word question is an even three-way random pick, from the first
+- Every word question is an even four-way random pick, from the first
   encounter: en→th (English shown and spoken, pick the Thai), th→en (Thai
-  shown and spoken with the Thai voice, pick the English), or **listening**
+  shown and spoken with the Thai voice, pick the English), **listening**
   (English audio only — no text, no pron hint, no emoji, all would leak the
   answer — pick the Thai; a dashed "ขอดูคำศัพท์หน่อย" helper button reveals
-  the written word + pron). Sentence questions flip 50/50 the same way: build
-  the English from a Thai prompt or the Thai from an English prompt. The
-  correct answer is spoken in English after answering.
+  the written word + pron), or **speaking** (see below). Sentence questions
+  mix the same way: build the English from a Thai prompt, build the Thai
+  from an English prompt, or speak the English (25%). The correct answer is
+  spoken in English after answering.
+- **Speaking questions** (words and sentences share `renderSpeakQuestion`):
+  Thai prompt shown and spoken, she says the English out loud. A helper pill
+  reveals + speaks the answer, turning it into "repeat after me". With
+  SpeechRecognition available (`Recog` in `js/audio.js`), the transcript is
+  matched generously (fuzzy Levenshtein, target-anywhere-in-transcript, 70%
+  word overlap for sentences; helpers unit-testable in node) with 2 tries.
+  Without it — **iOS home-screen apps have no SpeechRecognition** — it
+  degrades to say-it-aloud with honest self-grading buttons. `ensureSpeak()`
+  guarantees at least one speaking question per session.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
 - A sentence pack is **passed** once a session ends with a score ≥80%

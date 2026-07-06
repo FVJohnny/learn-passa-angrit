@@ -449,16 +449,73 @@ function renderHome() {
   });
 }
 
+// ── speaking questions: generous transcript matching ────────
+// a beginner with a Thai accent gets the benefit of the doubt: strip
+// punctuation, allow a little fuzz, accept the target anywhere in the
+// transcript (recognizers pad with extra words)
+const normSpeech = (s) =>
+  s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+function editDistance(a, b) {
+  if (a === b) return 0;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function speechWordOk(cands, target) {
+  const t = normSpeech(noParen(target));
+  const tol = t.length >= 6 ? 2 : t.length >= 4 ? 1 : 0;
+  return (cands || []).some((raw) => {
+    const c = normSpeech(raw);
+    if (!c) return false;
+    if (c === t || c.includes(t) || editDistance(c, t) <= tol) return true;
+    return c.split(' ').some((w) => editDistance(w, t) <= tol);
+  });
+}
+
+function speechSentenceOk(cands, target) {
+  const tw = normSpeech(target).split(' ');
+  return (cands || []).some((raw) => {
+    const cw = normSpeech(raw).split(' ');
+    const hit = tw.filter((w) =>
+      cw.some((c) => c === w || editDistance(c, w) <= (w.length >= 5 ? 1 : 0))
+    ).length;
+    return hit / tw.length >= 0.7;
+  });
+}
+
 // ═════════════════════════════════════════════════════════════
 // LESSONS — building question lists
 // ═════════════════════════════════════════════════════════════
 let session = null;
 
+// every session gets at least one speaking question, however the dice fell
+function ensureSpeak(questions) {
+  const has = questions.some((q) => (q.kind === 'word' ? q.type : q.dir) === 'speak');
+  if (!has && questions.length) {
+    const q = pick(questions);
+    if (q.kind === 'word') q.type = 'speak';
+    else q.dir = 'speak';
+  }
+  return questions;
+}
+
 function questionForWord(word, pack) {
   const id = `${pack.id}:${word.en}`;
-  // even three-way mix from the first encounter: en→th, th→en, listening
+  // even four-way mix from the first encounter: read both directions,
+  // listen, and speak
   const r = Math.random();
-  const type = r < 1 / 3 ? 'listen' : r < 2 / 3 ? 'en2th' : 'th2en';
+  const type = r < 0.25 ? 'speak' : r < 0.5 ? 'listen' : r < 0.75 ? 'en2th' : 'th2en';
   const others = sample(pack.words.filter((w) => w.en !== word.en), 3);
   return { kind: 'word', type, word, pack, id, choices: shuffle([word, ...others]) };
 }
@@ -470,7 +527,7 @@ function startWordLesson(pack) {
   const words = unmastered.length ? unmastered : pack.words;
   session = {
     mode: 'words', pack,
-    questions: shuffle(words).map((w) => questionForWord(w, pack)),
+    questions: ensureSpeak(shuffle(words).map((w) => questionForWord(w, pack))),
     index: 0, correct: 0, masteredBefore: masteredIn(pack),
   };
   renderQuestion();
@@ -479,10 +536,12 @@ function startWordLesson(pack) {
 function startSentenceLesson(pack) {
   session = {
     mode: 'sentences', pack,
-    questions: shuffle(pack.sentences).map((s) => ({
-      kind: 'sentence', sentence: s, pack,
-      // build the English from a Thai prompt, or the Thai from an English one
-      dir: s.thTiles && Math.random() < 0.5 ? 'en2th' : 'th2en',
+    questions: ensureSpeak(shuffle(pack.sentences).map((s) => {
+      // build the English from a Thai prompt, build the Thai from an
+      // English one, or speak the English out loud
+      const r = Math.random();
+      const dir = r < 0.25 ? 'speak' : (s.thTiles && r < 0.625) ? 'en2th' : 'th2en';
+      return { kind: 'sentence', sentence: s, pack, dir };
     })),
     index: 0, correct: 0,
   };
@@ -505,7 +564,7 @@ function lessonChrome(innerHTML) {
     ${innerHTML}
   </div>
   <div class="feedback-bar" id="feedback-bar"></div>`;
-  $('#quit-btn').addEventListener('click', () => { speechSynthesis.cancel?.(); renderHome(); });
+  $('#quit-btn').addEventListener('click', () => { speechSynthesis.cancel?.(); Recog.stop(); renderHome(); });
   // animate progress to current position
   requestAnimationFrame(() => {
     $('.progress-fill').style.width = (session.index / session.questions.length) * 100 + '%';
@@ -514,6 +573,7 @@ function lessonChrome(innerHTML) {
 
 function renderQuestion() {
   const q = session.questions[session.index];
+  if ((q.kind === 'word' ? q.type : q.dir) === 'speak') return renderSpeakQuestion(q);
   if (q.kind === 'sentence') return renderSentenceQuestion(q);
 
   const { type, word, pack } = q;
@@ -662,6 +722,99 @@ function renderSentenceQuestion(q) {
   });
 }
 
+// ═════════════════════════════════════════════════════════════
+// SCREEN: speaking question (words and sentences share it)
+// ═════════════════════════════════════════════════════════════
+function renderSpeakQuestion(q) {
+  const isWord = q.kind === 'word';
+  const target = isWord ? q.word.en : q.sentence.en;
+  const th = isWord ? q.word.th : q.sentence.th;
+  let tries = 0;
+  let answered = false;
+
+  lessonChrome(`
+    <div class="q-card">
+      <div class="q-prompt">พูดเป็นภาษาอังกฤษ 🎤 · Say it in English</div>
+      ${isWord ? `<span class="q-emoji">${q.word.emoji}</span>` : ''}
+      <div class="q-word-th" ${isWord ? '' : 'style="font-size:1.4rem"'}>${esc(th)}</div>
+      <div><button class="speak-btn" id="speak-btn" aria-label="ฟังโจทย์ hear the prompt">🔊</button></div>
+      <div id="speak-reveal">
+        <button class="reveal-btn" id="reveal-btn">👀 ขอคำใบ้ · Help me say it</button>
+      </div>
+    </div>
+    <div class="mic-zone" id="mic-zone"></div>`);
+
+  Speech.sayThai(noParen(th).split('/')[0].trim());
+  $('#speak-btn').addEventListener('click', () =>
+    Speech.sayThai(noParen(th).split('/')[0].trim()));
+
+  // the hint shows AND says the English — turning the question into
+  // "repeat after me", which is still real speaking practice
+  $('#reveal-btn').addEventListener('click', () => {
+    Sfx.pop();
+    $('#speak-reveal').innerHTML =
+      `<div class="q-word-en" style="font-size:1.5rem">${esc(target)}</div>` +
+      (isWord ? `<div><span class="q-pron">🗣️ ${q.word.pron}</span></div>` : '');
+    Speech.say(target);
+  });
+
+  const answer = (ok) => {
+    if (answered) return;
+    answered = true;
+    Recog.stop();
+    if (isWord) answerWord(q, ok);
+    else { Speech.say(q.sentence.en); answerSentence(q, ok); }
+  };
+
+  // no recognition (e.g. iOS home-screen app): say it out loud, self-grade
+  const renderSelfJudge = () => {
+    $('#mic-zone').innerHTML = `
+      <div class="mic-hint">พูดออกเสียงดังๆ แล้วตอบตามตรงนะ
+        <span class="en-line">Say it out loud — answer honestly!</span></div>
+      <div class="self-judge">
+        <button class="btn btn-mint" id="said-ok">พูดได้แล้ว ✓<span class="en-line">I said it!</span></button>
+        <button class="btn" id="said-no">ยังไม่ได้ 💪<span class="en-line">Not yet</span></button>
+      </div>`;
+    $('#said-ok').addEventListener('click', () => answer(true));
+    $('#said-no').addEventListener('click', () => answer(false));
+  };
+
+  if (!Recog.available) return renderSelfJudge();
+
+  $('#mic-zone').innerHTML = `
+    <button class="mic-btn" id="mic-btn" aria-label="พูด speak">🎤</button>
+    <div class="mic-hint" id="mic-hint">แตะไมค์แล้วพูดเลย
+      <span class="en-line">Tap the mic and speak</span></div>
+    <div class="mic-out" id="mic-out"></div>`;
+
+  $('#mic-btn').addEventListener('click', async () => {
+    if (answered || Recog.active) return;
+    const btn = $('#mic-btn');
+    const hint = $('#mic-hint');
+    const out = $('#mic-out');
+    btn.classList.add('listening');
+    hint.innerHTML = 'กำลังฟัง...<span class="en-line">Listening…</span>';
+    const cands = await Recog.listen({ onInterim: (t) => { out.textContent = t; } });
+    btn.classList.remove('listening');
+    if (answered) return;
+    if (cands === null) {
+      // mic denied or recognition broken — degrade to self-grading
+      toast('🎤', 'ใช้ไมค์ไม่ได้ ไม่เป็นไรนะ', "Mic not available — that's okay");
+      return renderSelfJudge();
+    }
+    if (!cands.length) {
+      hint.innerHTML = 'ไม่ได้ยินเลย ลองพูดอีกครั้งนะ<span class="en-line">I didn’t hear you — try again</span>';
+      return;
+    }
+    out.textContent = `“${cands[0]}”`;
+    const ok = isWord ? speechWordOk(cands, target) : speechSentenceOk(cands, target);
+    if (ok) return answer(true);
+    tries += 1;
+    if (tries >= 2) return answer(false);
+    hint.innerHTML = 'เกือบแล้ว! ลองพูดอีกครั้ง 💪<span class="en-line">Almost — try once more</span>';
+  });
+}
+
 // ── answering ───────────────────────────────────────────────
 function answerWord(q, correct) {
   const stat = state.words[q.id] || (state.words[q.id] = { c: 0, w: 0 });
@@ -674,7 +827,7 @@ function answerWord(q, correct) {
     Sfx.wrong();
   }
   save();
-  if (q.type === 'th2en' || q.type === 'listen') Speech.say(q.word.en);
+  if (q.type === 'th2en' || q.type === 'listen' || q.type === 'speak') Speech.say(q.word.en);
   showFeedback(correct, q.word);
 }
 
