@@ -104,6 +104,10 @@ Sentence packs (`data/sentences.js`):
   with the Thai voice, pick the English). Sentence questions flip the same way:
   build the English from a Thai prompt or the Thai from an English prompt.
   The correct answer is spoken in English after answering.
+- Words with any prior answer (right or wrong) have a 1-in-3 chance of coming
+  back as a **listening question** instead: English audio only — no text, no
+  pron hint, no emoji (all would leak the answer) — pick the Thai. First-ever
+  encounters are never listening questions.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
 - **Level 3 unlocks at 150 total mastered words** (`LEVEL3_WORDS`) — longer
