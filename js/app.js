@@ -440,11 +440,9 @@ let session = null;
 
 function questionForWord(word, pack) {
   const id = `${pack.id}:${word.en}`;
-  // 50/50 coin flip between the two directions, from the first encounter;
-  // words she has met before can also come back as listening-only questions
-  let type = Math.random() < 0.5 ? 'en2th' : 'th2en';
-  const s = wstat(id);
-  if (s.c + s.w > 0 && Math.random() < 1 / 3) type = 'listen';
+  // even three-way mix from the first encounter: en→th, th→en, listening
+  const r = Math.random();
+  const type = r < 1 / 3 ? 'listen' : r < 2 / 3 ? 'en2th' : 'th2en';
   const others = sample(pack.words.filter((w) => w.en !== word.en), 3);
   return { kind: 'word', type, word, pack, id, choices: shuffle([word, ...others]) };
 }
@@ -507,17 +505,26 @@ function renderQuestion() {
 
   if (type === 'listen') {
     // audio only — no English text, no pron hint (it would spell out the
-    // sound), no emoji (choices are Thai, a picture would leak the answer)
+    // sound), no emoji (choices are Thai, a picture would leak the answer).
+    // A helper button reveals the written word if she's stuck.
     lessonChrome(`
       <div class="q-card">
         <div class="q-prompt">ฟังแล้วเลือกคำแปล · Listen and choose</div>
-        <button class="speak-btn big" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button>
+        <div><button class="speak-btn big" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button></div>
+        <div id="listen-reveal">
+          <button class="reveal-btn" id="reveal-btn">👀 ขอดูคำศัพท์หน่อย · Show me the word</button>
+        </div>
       </div>
       <div class="choices">
         ${q.choices.map((c, i) => `
           <button class="choice-btn" data-i="${i}">${esc(noParen(c.th))}</button>`).join('')}
       </div>`);
     Speech.say(word.en);
+    $('#reveal-btn').addEventListener('click', () => {
+      Sfx.pop();
+      $('#listen-reveal').innerHTML =
+        `<div class="q-word-en" style="font-size:1.7rem">${esc(word.en)}</div>${pron}`;
+    });
   } else if (type === 'en2th') {
     lessonChrome(`
       <div class="q-card">

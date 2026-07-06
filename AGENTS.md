@@ -99,15 +99,14 @@ Sentence packs (`data/sentences.js`):
 - A session asks **all not-yet-mastered words** of the pack, shuffled. Every
   answer is saved immediately, so quitting mid-session keeps progress. A
   fully-mastered pack replays all of its words.
-- Every question is a 50/50 coin flip between the two directions — en→th
-  (English shown and spoken, pick the Thai) and th→en (Thai shown and spoken
-  with the Thai voice, pick the English). Sentence questions flip the same way:
-  build the English from a Thai prompt or the Thai from an English prompt.
-  The correct answer is spoken in English after answering.
-- Words with any prior answer (right or wrong) have a 1-in-3 chance of coming
-  back as a **listening question** instead: English audio only — no text, no
-  pron hint, no emoji (all would leak the answer) — pick the Thai. First-ever
-  encounters are never listening questions.
+- Every word question is an even three-way random pick, from the first
+  encounter: en→th (English shown and spoken, pick the Thai), th→en (Thai
+  shown and spoken with the Thai voice, pick the English), or **listening**
+  (English audio only — no text, no pron hint, no emoji, all would leak the
+  answer — pick the Thai; a dashed "ขอดูคำศัพท์หน่อย" helper button reveals
+  the written word + pron). Sentence questions flip 50/50 the same way: build
+  the English from a Thai prompt or the Thai from an English prompt. The
+  correct answer is spoken in English after answering.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
 - **Level 3 unlocks at 150 total mastered words** (`LEVEL3_WORDS`) — longer

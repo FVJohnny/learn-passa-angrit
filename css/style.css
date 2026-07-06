@@ -423,6 +423,20 @@ body::before {
 }
 .speak-btn:active { transform: scale(0.88); }
 .speak-btn.big { width: 96px; height: 96px; font-size: 2.6rem; margin-top: 4px; }
+.reveal-btn {
+  border: 2px dashed var(--butter);
+  background: var(--butter-soft);
+  color: #8a6d2f;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 999px;
+  padding: 8px 18px;
+  margin-top: 14px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.reveal-btn:active { transform: scale(0.92); }
 .speak-btn.speaking { animation: pulse-speak 0.9s ease-in-out infinite; }
 @keyframes pulse-speak {
   0%, 100% { box-shadow: 0 0 0 0 rgba(111, 181, 240, 0.5); }
