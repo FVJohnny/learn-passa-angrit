@@ -19,10 +19,13 @@ WORD_PACKS.forEach((pack) => {
   });
 });
 
-// ── state ───────────────────────────────────────────────────
+// ── state: a root object holds many profiles ────────────────
+// root = { rev, current: profileId, profiles: { id: profileState } }
+// `state` always points at the active profile inside root.profiles.
 function defaultState() {
   return {
     name: '',
+    avatar: '🍌',               // profile icon
     pron: true,                 // show pronunciation hints
     words: {},                  // id -> {c, w}
     streak: { count: 0, last: '' },
@@ -30,15 +33,30 @@ function defaultState() {
   };
 }
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return Object.assign(defaultState(), JSON.parse(raw));
-  } catch (e) { /* corrupted storage — start fresh */ }
-  return defaultState();
+const AVATARS = ['🍌', '🐱', '🐶', '🐘', '🦄', '🐼', '🐸', '🦊', '🐰', '🐯', '🌸', '⭐'];
+
+function defaultRoot() {
+  return { rev: 0, current: null, profiles: {} };
 }
 
-let state = loadState();
+// accepts either the multi-profile root shape or the legacy
+// single-profile shape (pre-profiles installs) and returns a root
+function toRoot(parsed) {
+  if (parsed && parsed.profiles) return Object.assign(defaultRoot(), parsed);
+  const prof = Object.assign(defaultState(), parsed);
+  return { rev: (parsed && parsed.rev) || 0, current: 'p1', profiles: { p1: prof } };
+}
+
+function loadRoot() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return toRoot(JSON.parse(raw));
+  } catch (e) { /* corrupted storage — start fresh */ }
+  return defaultRoot();
+}
+
+let root = loadRoot();
+let state = (root.current && root.profiles[root.current]) || defaultState();
 
 // ── durable storage: double-write to IndexedDB ──────────────
 // iOS standalone web apps can fail to flush localStorage to disk before a
@@ -77,11 +95,23 @@ async function idbGet() {
 }
 
 const save = () => {
-  state.rev = (state.rev || 0) + 1;
-  const json = JSON.stringify(state);
+  root.rev = (root.rev || 0) + 1;
+  const json = JSON.stringify(root);
   try { localStorage.setItem(STORAGE_KEY, json); } catch (e) {}
   idbSet(json);
 };
+
+function selectProfile(id) {
+  root.current = id;
+  state = root.profiles[id];
+  save();
+}
+
+function createProfile(name, avatar) {
+  const id = 'p' + Date.now();
+  root.profiles[id] = Object.assign(defaultState(), { name, avatar: avatar || '🍌' });
+  selectProfile(id);
+}
 
 // ── helpers ─────────────────────────────────────────────────
 const esc = (s) => String(s).replace(/[&<>"']/g, (ch) =>
@@ -110,6 +140,8 @@ const isMastered = (id) => wstat(id).c >= MASTER_AT;
 const masteredIn = (pack) => pack.words.filter((w) => isMastered(`${pack.id}:${w.en}`)).length;
 const masteredTotal = () =>
   Object.keys(state.words).filter((id) => WORDS_BY_ID[id] && isMastered(id)).length;
+const masteredOf = (profile) =>
+  Object.keys(profile.words || {}).filter((id) => WORDS_BY_ID[id] && (profile.words[id].c || 0) >= MASTER_AT).length;
 const packDone = (pack) => masteredIn(pack) === pack.words.length;
 
 function streakCurrent() {
@@ -174,9 +206,48 @@ function greeting() {
 }
 
 // ═════════════════════════════════════════════════════════════
-// SCREEN: welcome (first launch)
+// SCREEN: profile picker + welcome (create profile)
 // ═════════════════════════════════════════════════════════════
+function renderProfiles() {
+  session = null;
+  const ids = Object.keys(root.profiles);
+  appEl.innerHTML = `
+  <div class="screen welcome-wrap">
+    <div>${mascotSVG({ mood: 'happy', size: 140 })}</div>
+    <h1 class="app-title">ใครกำลังเรียนจ๊ะ?
+      <span class="en-line">Who's learning?</span>
+    </h1>
+    <div class="profile-list">
+      ${ids.map((id) => {
+        const p = root.profiles[id];
+        return `
+        <button class="profile-card" data-id="${id}">
+          <span class="p-avatar">${esc(p.avatar || '🍌')}</span>
+          <span class="p-name">${esc(p.name)}</span>
+          <span class="pack-count">จำได้ ${masteredOf(p)} คำ</span>
+        </button>`;
+      }).join('')}
+      <button class="profile-card new-profile" id="new-profile-btn">
+        <span class="p-avatar">➕</span>
+        <span class="p-name">โปรไฟล์ใหม่</span>
+        <span class="en-line">New profile</span>
+      </button>
+    </div>
+  </div>`;
+
+  $$('.profile-card[data-id]').forEach((card) => {
+    card.addEventListener('click', () => {
+      Sfx.pop();
+      selectProfile(card.dataset.id);
+      renderHome();
+    });
+  });
+  $('#new-profile-btn').addEventListener('click', () => { Sfx.pop(); renderWelcome(); });
+}
+
 function renderWelcome() {
+  session = null;
+  const hasProfiles = Object.keys(root.profiles).length > 0;
   appEl.innerHTML = `
   <div class="screen welcome-wrap">
     <div>${mascotSVG({ mood: 'happy', size: 170 })}</div>
@@ -189,24 +260,43 @@ function renderWelcome() {
       </div>
       <input class="name-input" id="name-input" maxlength="20"
         placeholder="ชื่อเล่น · nickname" autocomplete="off" />
+      <div class="hello-q" style="font-size:1rem">เลือกไอคอนของเธอ
+        <span class="en-line">Pick your icon</span>
+      </div>
+      <div class="avatar-grid">
+        ${AVATARS.map((a) => `
+        <button class="avatar-btn ${a === '🍌' ? 'selected' : ''}" data-avatar="${a}">${a}</button>`).join('')}
+      </div>
       <button class="btn btn-big" id="start-btn">เริ่มเรียนกันเลย! 🌸
         <span class="en-line">Let's start learning!</span>
       </button>
+      ${hasProfiles ? `
+      <button class="btn btn-ghost" id="back-profiles">← กลับไปเลือกโปรไฟล์
+        <span class="en-line">Back to profiles</span>
+      </button>` : ''}
     </div>
   </div>`;
 
   const input = $('#name-input');
+  let chosenAvatar = '🍌';
+  $$('.avatar-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sfx.pop();
+      chosenAvatar = btn.dataset.avatar;
+      $$('.avatar-btn').forEach((b) => b.classList.toggle('selected', b === btn));
+    });
+  });
   const start = () => {
     const name = input.value.trim();
     if (!name) { input.focus(); input.placeholder = 'บอกชื่อกล้วยน้อยหน่อยนะ 🥺'; return; }
-    state.name = name;
-    save();
+    createProfile(name, chosenAvatar);
     Sfx.fanfare();
     confetti(60);
     renderHome();
   };
   $('#start-btn').addEventListener('click', start);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') start(); });
+  $('#back-profiles')?.addEventListener('click', renderProfiles);
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -251,6 +341,7 @@ function renderHome() {
         <div class="chip chip-fire ${streak > 0 ? 'lit' : ''}" title="เรียนติดต่อกัน">
           🔥 ${streak} <span class="chip-sub">วัน<br>days</span>
         </div>
+        <button class="icon-btn" id="profile-btn" aria-label="เปลี่ยนโปรไฟล์ switch profile">${esc(state.avatar || '👥')}</button>
         <button class="icon-btn" id="unlock-btn" aria-label="ปลดล็อคทุกแพ็ค unlock all">${state.unlockAll ? '🔓' : '🔐'}</button>
         <button class="icon-btn" id="settings-btn" aria-label="ตั้งค่า settings">⚙️</button>
       </div>
@@ -304,6 +395,7 @@ function renderHome() {
   </div>`;
 
   $('#settings-btn').addEventListener('click', openSettings);
+  $('#profile-btn').addEventListener('click', () => { Sfx.pop(); renderProfiles(); });
   refreshVersionTag();
   $('#unlock-btn').addEventListener('click', () => {
     if (state.unlockAll) {
@@ -700,6 +792,7 @@ function openSettings() {
       const data = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
       if (!data || typeof data.words !== 'object') throw new Error('bad code');
       state = Object.assign(defaultState(), data);
+      root.profiles[root.current] = state;
       save();
       backdrop.remove();
       toast('🎉', 'กู้คืนความคืบหน้าแล้ว!', 'Progress restored!');
@@ -710,12 +803,13 @@ function openSettings() {
   });
   $('#set-done', backdrop).addEventListener('click', close);
   $('#set-reset', backdrop).addEventListener('click', () => {
-    if (confirm('แน่ใจไหม? ความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? All progress will be lost.')) {
-      localStorage.removeItem(STORAGE_KEY);
-      idbSet(null);
-      state = loadState();
+    if (confirm('แน่ใจไหม? โปรไฟล์นี้และความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? This profile and all its progress will be deleted.')) {
+      delete root.profiles[root.current];
+      root.current = null;
+      state = defaultState();
+      save();
       backdrop.remove();
-      renderWelcome();
+      renderBoot();
     }
   });
 }
@@ -773,10 +867,14 @@ setInterval(() => { if (!document.hidden) checkForUpdate(); }, 10000);
 // ═════════════════════════════════════════════════════════════
 // boot
 // ═════════════════════════════════════════════════════════════
+function renderBoot() {
+  if (Object.keys(root.profiles).length) renderProfiles();
+  else renderWelcome();
+}
+
 Speech.init();
 if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
-if (state.name) renderHome();
-else renderWelcome();
+renderBoot();
 
 // the reload-guard flag survives the update reload — if it matches the
 // version now running, the update just landed: tell the user
@@ -794,12 +892,12 @@ checkForUpdate();
 idbGet().then((raw) => {
   if (!raw || session) return;
   try {
-    const data = JSON.parse(raw);
-    if ((data.rev || 0) > (state.rev || 0)) {
-      state = Object.assign(defaultState(), data);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-      if (state.name) renderHome();
-      else renderWelcome();
+    const data = toRoot(JSON.parse(raw));
+    if ((data.rev || 0) > (root.rev || 0)) {
+      root = data;
+      state = (root.current && root.profiles[root.current]) || defaultState();
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(root)); } catch (e) {}
+      renderBoot();
     }
   } catch (e) { /* corrupted backup — keep current state */ }
 });

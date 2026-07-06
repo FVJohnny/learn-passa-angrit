@@ -112,12 +112,18 @@ Sentence packs (`data/sentences.js`):
 - Streak = consecutive days with a completed session.
 - Lessons show a live ✓ correct-count chip next to the question counter;
   results celebrate at ≥80% (confetti) and offer "try again" below that.
-- Progress is stored under key **`gluaynoi-v1`**, double-written to localStorage
-  AND IndexedDB (`gluaynoi-db`/kv/state) with a `rev` counter — iOS home-screen
-  apps can lose un-flushed localStorage on force-quit, so boot recovers from
-  whichever copy has the higher rev. Schema in `defaultState()`. Never wipe or
-  rename these casually; a schema change needs a migration. Settings offer
-  backup/restore via a base64 code.
+- **Profiles**: several people share a device. Storage under key
+  **`gluaynoi-v1`** is a root object `{ rev, current, profiles: { id: state } }`;
+  `state` always aliases the active profile (schema per profile in
+  `defaultState()`, including `name` and an emoji `avatar`). `toRoot()`
+  migrates legacy single-profile blobs. Opening the app shows the profile
+  picker; the avatar button on home switches profiles; settings reset deletes
+  only the current profile; backup/restore codes carry one profile.
+- The root is double-written to localStorage AND IndexedDB
+  (`gluaynoi-db`/kv/state) with a `rev` counter — iOS home-screen apps can lose
+  un-flushed localStorage on force-quit, so boot recovers from whichever copy
+  has the higher rev. Never wipe or rename these casually; a schema change
+  needs a migration.
 
 ## Testing / verification
 

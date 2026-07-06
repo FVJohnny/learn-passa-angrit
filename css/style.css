@@ -314,6 +314,48 @@ body::before {
 .name-input:focus { border-color: var(--pink-deep); background: #fff; }
 .name-input::placeholder { color: #d9a8b8; font-weight: 500; }
 
+/* ── profile picker ──────────────────────────────────────── */
+.profile-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+.profile-card {
+  font-family: var(--font-thai);
+  background: var(--paper);
+  border: 2.5px solid #f6ebdf;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 0 #f0e2d3;
+  padding: 18px 12px 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.profile-card:active { transform: translateY(3px); box-shadow: 0 1px 0 #f0e2d3; }
+.profile-card .p-avatar { font-size: 2.2rem; filter: drop-shadow(0 3px 4px rgba(160, 120, 100, 0.25)); }
+.profile-card .p-name { font-weight: 700; font-size: 1.1rem; color: var(--ink); }
+.profile-card.new-profile { border-style: dashed; background: var(--mint-soft); border-color: var(--mint); }
+
+.avatar-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.avatar-btn {
+  width: 48px; height: 48px;
+  font-size: 1.5rem;
+  border-radius: 14px;
+  border: 2.5px solid #f0e2d3;
+  background: var(--paper);
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s, background 0.15s;
+  display: grid; place-items: center;
+}
+.avatar-btn:active { transform: scale(0.9); }
+.avatar-btn.selected {
+  border-color: var(--pink-deep);
+  background: var(--pink-soft);
+  transform: scale(1.08);
+}
+
 /* ── lesson screen ───────────────────────────────────────── */
 .lesson-top { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .progress-track {
@@ -637,6 +679,8 @@ body::before {
   .topbar .brand .logo-emoji { font-size: 1.35rem; }
   .chip { padding: 6px 10px; font-size: 0.9rem; }
   .chip .chip-sub { display: none; }
+  .stat-chips { gap: 6px; }
+  .stat-chips .icon-btn { width: 38px; height: 38px; font-size: 1rem; }
 }
 @media (max-width: 380px) {
   .pack-grid { gap: 9px; }
