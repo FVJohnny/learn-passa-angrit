@@ -27,6 +27,7 @@ function defaultState() {
   return {
     name: '',
     avatar: '🍌',               // profile icon
+    lang: 'en',                 // learning 'en' (Thai speaker) or 'th' (farang)
     words: {},                  // id -> {c, w}
     spacks: {},                 // sentence packId -> true once passed (≥80%)
     streak: { count: 0, last: '' },
@@ -108,9 +109,11 @@ function selectProfile(id) {
   save();
 }
 
-function createProfile(name, avatar) {
+function createProfile(name, avatar, lang) {
   const id = 'p' + Date.now();
-  root.profiles[id] = Object.assign(defaultState(), { name, avatar: avatar || '🍌' });
+  root.profiles[id] = Object.assign(defaultState(), {
+    name, avatar: avatar || '🍌', lang: lang === 'th' ? 'th' : 'en',
+  });
   selectProfile(id);
 }
 
@@ -146,6 +149,21 @@ const masteredOf = (profile) =>
 const packDone = (pack) => masteredIn(pack) === pack.words.length;
 // older profiles predate `spacks` — guard the access
 const spackPassed = (id) => !!(state.spacks && state.spacks[id]);
+
+// ── learning direction ──────────────────────────────────────
+// 'en': a Thai speaker learning English (the original mode)
+// 'th': an English speaker (farang) learning Thai — same content reversed,
+//       Thai always accompanied by romanization since they don't read script
+const learningThai = () => state.lang === 'th';
+// bilingual UI text: learner's own language big, the other small underneath
+const bi = (th, en) => learningThai()
+  ? `${en}<span class="en-line">${th}</span>`
+  : `${th}<span class="en-line">${en}</span>`;
+// tone-marked romanization of an exact Thai string (data/romanize.js)
+const rom = (th) => (typeof TH_ROM !== 'undefined' && TH_ROM[th]) || '';
+const cleanTh = (th) => noParen(th).split('/')[0].trim();
+// the language being learned, spoken aloud
+const sayTarget = (en, th) => (learningThai() ? Speech.sayThai(cleanTh(th)) : Speech.say(en));
 
 function streakCurrent() {
   const { count, last } = state.streak;
@@ -183,7 +201,7 @@ function toast(emoji, thMsg, enMsg) {
   const layer = $('#toast-layer');
   const t = document.createElement('div');
   t.className = 'toast';
-  t.innerHTML = `<span class="t-emoji">${emoji}</span><span>${thMsg}<span class="en-line">${enMsg}</span></span>`;
+  t.innerHTML = `<span class="t-emoji">${emoji}</span><span>${bi(thMsg, enMsg)}</span>`;
   layer.appendChild(t);
   setTimeout(() => t.remove(), 4000);
 }
@@ -223,11 +241,12 @@ function renderProfiles() {
     <div class="profile-list">
       ${ids.map((id) => {
         const p = root.profiles[id];
+        const farang = p.lang === 'th';
         return `
         <button class="profile-card" data-id="${id}">
           <span class="p-avatar">${esc(p.avatar || '🍌')}</span>
-          <span class="p-name">${esc(p.name)}</span>
-          <span class="pack-count">จำได้ ${masteredOf(p)} คำ</span>
+          <span class="p-name">${esc(p.name)} <span class="p-lang">${farang ? '🇹🇭' : '🇬🇧'}</span></span>
+          <span class="pack-count">${farang ? `knows ${masteredOf(p)} words` : `จำได้ ${masteredOf(p)} คำ`}</span>
         </button>`;
       }).join('')}
       <button class="profile-card new-profile" id="new-profile-btn">
@@ -255,7 +274,7 @@ function renderWelcome() {
   <div class="screen welcome-wrap">
     <div>${mascotSVG({ mood: 'happy', size: 170 })}</div>
     <h1 class="app-title">กล้วยน้อย
-      <span class="en-line">Little Banana · Learn English</span>
+      <span class="en-line">Little Banana · Learn English or Thai</span>
     </h1>
     <div class="welcome-card">
       <div class="hello-q">สวัสดีจ้า! เราชื่อ “กล้วยน้อย” 🍌<br>เธอชื่ออะไรจ๊ะ?
@@ -263,6 +282,13 @@ function renderWelcome() {
       </div>
       <input class="name-input" id="name-input" maxlength="20"
         placeholder="ชื่อเล่น · nickname" autocomplete="off" />
+      <div class="hello-q" style="font-size:1rem">อยากเรียนภาษาอะไร?
+        <span class="en-line">What do you want to learn?</span>
+      </div>
+      <div class="lang-choice">
+        <button class="lang-btn selected" data-lang="en">🇬🇧 ภาษาอังกฤษ<span class="en-line">English (I speak Thai)</span></button>
+        <button class="lang-btn" data-lang="th">🇹🇭 Thai<span class="en-line">ภาษาไทย (I speak English)</span></button>
+      </div>
       <div class="hello-q" style="font-size:1rem">เลือกไอคอนของเธอ
         <span class="en-line">Pick your icon</span>
       </div>
@@ -282,6 +308,7 @@ function renderWelcome() {
 
   const input = $('#name-input');
   let chosenAvatar = '🍌';
+  let chosenLang = 'en';
   $$('.avatar-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       Sfx.pop();
@@ -289,10 +316,17 @@ function renderWelcome() {
       $$('.avatar-btn').forEach((b) => b.classList.toggle('selected', b === btn));
     });
   });
+  $$('.lang-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      Sfx.pop();
+      chosenLang = btn.dataset.lang;
+      $$('.lang-btn').forEach((b) => b.classList.toggle('selected', b === btn));
+    });
+  });
   const start = () => {
     const name = input.value.trim();
     if (!name) { input.focus(); input.placeholder = 'บอกชื่อกล้วยน้อยหน่อยนะ 🥺'; return; }
-    createProfile(name, chosenAvatar);
+    createProfile(name, chosenAvatar, chosenLang);
     Sfx.fanfare();
     confetti(60);
     renderHome();
@@ -309,19 +343,21 @@ function packCardHTML(pack, list, index, isSentence) {
   const unlocked = packUnlocked(list, index, isSentence);
   const done = isSentence ? spackPassed(pack.id) : packDone(pack);
   let countHTML = '';
+  const farang = learningThai();
+  const wordUnit = farang ? 'words' : 'คำ';
   if (!isSentence) {
     const m = masteredIn(pack);
-    countHTML = `<span class="pack-count">${done ? `✓ ${pack.words.length}/${pack.words.length} คำ` : `${m}/${pack.words.length} คำ`}</span>`;
+    countHTML = `<span class="pack-count">${done ? `✓ ${pack.words.length}/${pack.words.length} ${wordUnit}` : `${m}/${pack.words.length} ${wordUnit}`}</span>`;
   } else {
-    countHTML = `<span class="pack-count">${done ? '✓ ' : ''}${pack.sentences.length} ประโยค</span>`;
+    countHTML = `<span class="pack-count">${done ? '✓ ' : ''}${pack.sentences.length} ${farang ? 'sentences' : 'ประโยค'}</span>`;
   }
   return `
   <div class="pack-card ${unlocked ? '' : 'locked'} ${done ? 'done' : ''}"
        data-pack="${pack.id}" data-kind="${isSentence ? 'sentence' : 'word'}" data-locked="${unlocked ? '' : '1'}">
     ${unlocked ? '' : '<span class="lock-corner">🔒</span>'}
     <span class="pack-ico">${pack.icon}</span>
-    <span class="pack-th">${pack.th}</span>
-    <span class="pack-en">${pack.en}</span>
+    <span class="pack-th">${farang ? pack.en : pack.th}</span>
+    <span class="pack-en">${farang ? pack.th : pack.en}</span>
     ${countHTML}
   </div>`;
 }
@@ -343,8 +379,8 @@ function renderHome() {
       <button class="icon-btn back-btn" id="profile-btn" aria-label="เปลี่ยนโปรไฟล์ switch profile">←</button>
       <div class="brand">${esc(state.avatar || '🍌')} ${esc(state.name)}</div>
       <div class="stat-chips">
-        <div class="chip chip-fire ${streak > 0 ? 'lit' : ''}" title="เรียนติดต่อกัน">
-          🔥 ${streak} <span class="chip-sub">วัน<br>days</span>
+        <div class="chip chip-fire ${streak > 0 ? 'lit' : ''}" title="เรียนติดต่อกัน streak">
+          🔥 ${streak} <span class="chip-sub">${learningThai() ? 'days<br>วัน' : 'วัน<br>days'}</span>
         </div>
         <button class="icon-btn" id="unlock-btn" aria-label="ปลดล็อคทุกแพ็ค unlock all">${state.unlockAll ? '🔓' : '🔐'}</button>
         <button class="icon-btn" id="settings-btn" aria-label="ตั้งค่า settings">⚙️</button>
@@ -353,13 +389,13 @@ function renderHome() {
 
     <div class="mascot-card">
       <div class="mascot-holder">${mascotSVG({ mood: g.mood, size: 130 })}</div>
-      <div class="speech-bubble">${g.th}<span class="en-line">${g.en}</span></div>
+      <div class="speech-bubble">${bi(g.th, g.en)}</div>
     </div>
 
     <div class="level-head level-1">
       <div class="level-badge">1</div>
-      <h2>คำศัพท์<span class="en-line">Words</span></h2>
-      <span class="lvl-progress">${l1done}/${WORD_PACKS.length} แพ็ค</span>
+      <h2>${bi('คำศัพท์', 'Words')}</h2>
+      <span class="lvl-progress">${l1done}/${WORD_PACKS.length} ${learningThai() ? 'packs' : 'แพ็ค'}</span>
     </div>
     <div class="pack-grid">
       ${WORD_PACKS.map((p, i) => packCardHTML(p, WORD_PACKS, i, false)).join('')}
@@ -367,7 +403,7 @@ function renderHome() {
 
     <div class="level-head level-2">
       <div class="level-badge">2</div>
-      <h2>ประโยคสั้นๆ<span class="en-line">Tiny sentences</span></h2>
+      <h2>${bi('ประโยคสั้นๆ', 'Tiny sentences')}</h2>
     </div>
     ${l2open ? `
     <div class="pack-grid">
@@ -375,14 +411,15 @@ function renderHome() {
     </div>` : `
     <div class="level-locked-note">
       <span class="big-ico">🔒</span>
-      <span>เรียนรู้คำศัพท์อีก <b>${LEVEL2_WORDS - mw}</b> คำเพื่อปลดล็อคระดับ 2 (ตอนนี้จำได้ ${mw} คำ)
-        <span class="en-line">Learn ${LEVEL2_WORDS - mw} more words to unlock Level 2</span>
+      <span>${bi(
+        `เรียนรู้คำศัพท์อีก <b>${LEVEL2_WORDS - mw}</b> คำเพื่อปลดล็อคระดับ 2 (ตอนนี้จำได้ ${mw} คำ)`,
+        `Learn <b>${LEVEL2_WORDS - mw}</b> more words to unlock Level 2 (you know ${mw})`)}
       </span>
     </div>`}
 
     <div class="level-head level-3">
       <div class="level-badge">3</div>
-      <h2>ประโยคที่ยาวขึ้น<span class="en-line">Longer sentences</span></h2>
+      <h2>${bi('ประโยคที่ยาวขึ้น', 'Longer sentences')}</h2>
     </div>
     ${l3open ? `
     <div class="pack-grid">
@@ -390,8 +427,9 @@ function renderHome() {
     </div>` : `
     <div class="level-locked-note">
       <span class="big-ico">🔒</span>
-      <span>ทำแพ็คระดับ 2 ให้ผ่านอีก <b>${SENTENCE_PACKS.length - l2passed}</b> แพ็คเพื่อปลดล็อคระดับ 3 (ผ่านแล้ว ${l2passed}/${SENTENCE_PACKS.length})
-        <span class="en-line">Pass ${SENTENCE_PACKS.length - l2passed} more Level 2 packs to unlock Level 3</span>
+      <span>${bi(
+        `ทำแพ็คระดับ 2 ให้ผ่านอีก <b>${SENTENCE_PACKS.length - l2passed}</b> แพ็คเพื่อปลดล็อคระดับ 3 (ผ่านแล้ว ${l2passed}/${SENTENCE_PACKS.length})`,
+        `Pass <b>${SENTENCE_PACKS.length - l2passed}</b> more Level 2 packs to unlock Level 3 (${l2passed}/${SENTENCE_PACKS.length} passed)`)}
       </span>
     </div>`}
 
@@ -512,10 +550,14 @@ function ensureSpeak(questions) {
 
 function questionForWord(word, pack) {
   const id = `${pack.id}:${word.en}`;
-  // even four-way mix from the first encounter: read both directions,
-  // listen, and speak
+  // even mix from the first encounter. target2native = read the learning
+  // language, pick your own; native2target = the reverse; listen = hear the
+  // learning language only. Speaking joins the mix for English learners;
+  // Thai learners skip it (owner decision: speaking tonal Thai is too hard).
   const r = Math.random();
-  const type = r < 0.25 ? 'speak' : r < 0.5 ? 'listen' : r < 0.75 ? 'en2th' : 'th2en';
+  const type = learningThai()
+    ? (r < 1 / 3 ? 'listen' : r < 2 / 3 ? 'target2native' : 'native2target')
+    : (r < 0.25 ? 'speak' : r < 0.5 ? 'listen' : r < 0.75 ? 'target2native' : 'native2target');
   const others = sample(pack.words.filter((w) => w.en !== word.en), 3);
   return { kind: 'word', type, word, pack, id, choices: shuffle([word, ...others]) };
 }
@@ -525,24 +567,28 @@ function startWordLesson(pack) {
   // and a fully-mastered pack replays all of its words
   const unmastered = pack.words.filter((w) => !isMastered(`${pack.id}:${w.en}`));
   const words = unmastered.length ? unmastered : pack.words;
+  const questions = shuffle(words).map((w) => questionForWord(w, pack));
   session = {
     mode: 'words', pack,
-    questions: ensureSpeak(shuffle(words).map((w) => questionForWord(w, pack))),
+    questions: learningThai() ? questions : ensureSpeak(questions),
     index: 0, correct: 0, masteredBefore: masteredIn(pack),
   };
   renderQuestion();
 }
 
 function startSentenceLesson(pack) {
+  // dir names are literal: en2th = build the Thai, th2en = build the English.
+  // English learners also get speaking questions; Thai learners don't.
+  const questions = shuffle(pack.sentences).map((s) => {
+    const r = Math.random();
+    const dir = learningThai()
+      ? (s.thTiles && r < 0.5 ? 'en2th' : 'th2en')
+      : (r < 0.25 ? 'speak' : (s.thTiles && r < 0.625) ? 'en2th' : 'th2en');
+    return { kind: 'sentence', sentence: s, pack, dir };
+  });
   session = {
     mode: 'sentences', pack,
-    questions: ensureSpeak(shuffle(pack.sentences).map((s) => {
-      // build the English from a Thai prompt, build the Thai from an
-      // English one, or speak the English out loud
-      const r = Math.random();
-      const dir = r < 0.25 ? 'speak' : (s.thTiles && r < 0.625) ? 'en2th' : 'th2en';
-      return { kind: 'sentence', sentence: s, pack, dir };
-    })),
+    questions: learningThai() ? questions : ensureSpeak(questions),
     index: 0, correct: 0,
   };
   renderQuestion();
@@ -576,62 +622,84 @@ function renderQuestion() {
   if ((q.kind === 'word' ? q.type : q.dir) === 'speak') return renderSpeakQuestion(q);
   if (q.kind === 'sentence') return renderSentenceQuestion(q);
 
-  const { type, word, pack } = q;
-  const pron = `<div><span class="q-pron">🗣️ ${word.pron}</span></div>`;
+  const { type, word } = q;
+  const farang = learningThai();
+
+  // the word in the learning language, big, with its pronunciation help —
+  // English + Thai-script pron for her; Thai + romanization for a farang
+  const targetHTML = farang
+    ? `<div class="q-word-th">${esc(noParen(word.th))}</div>
+       <div><span class="q-pron">🗣️ ${esc(noParen(rom(word.th)) || '')}</span></div>`
+    : `<div class="q-word-en">${esc(word.en)}</div>
+       <div><span class="q-pron">🗣️ ${word.pron}</span></div>`;
+
+  // answer buttons: never a picture next to choices in the learner's own
+  // language (it would leak the meaning without reading the target language)
+  const nativeChoice = (c) => (farang
+    ? `<span class="c-en">${esc(c.en)}</span>`
+    : esc(noParen(c.th)));
+  const targetChoice = (c) => (farang
+    ? `<span class="c-rom">${esc(noParen(rom(c.th) || c.th))}</span><span class="c-th">${esc(noParen(c.th))}</span>`
+    : `<span class="c-en">${esc(c.en)}</span>`);
 
   if (type === 'listen') {
-    // audio only — no English text, no pron hint (it would spell out the
-    // sound), no emoji (choices are Thai, a picture would leak the answer).
-    // A helper button reveals the written word if she's stuck.
+    // audio only — no text, no pron/rom hint, no emoji (all would leak the
+    // answer). A helper button reveals the written word when stuck.
     lessonChrome(`
       <div class="q-card">
-        <div class="q-prompt">ฟังแล้วเลือกคำแปล · Listen and choose</div>
+        <div class="q-prompt">${bi('ฟังแล้วเลือกคำแปล', 'Listen and choose')}</div>
         <div><button class="speak-btn big" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button></div>
         <div id="listen-reveal">
-          <button class="reveal-btn" id="reveal-btn">👀 ขอดูคำศัพท์หน่อย · Show me the word</button>
+          <button class="reveal-btn" id="reveal-btn">👀 ${bi('ขอดูคำศัพท์หน่อย', 'Show me the word')}</button>
         </div>
       </div>
       <div class="choices">
         ${q.choices.map((c, i) => `
-          <button class="choice-btn" data-i="${i}">${esc(noParen(c.th))}</button>`).join('')}
+          <button class="choice-btn" data-i="${i}">${nativeChoice(c)}</button>`).join('')}
       </div>`);
-    Speech.say(word.en);
+    sayTarget(word.en, word.th);
     $('#reveal-btn').addEventListener('click', () => {
       Sfx.pop();
-      $('#listen-reveal').innerHTML =
-        `<div class="q-word-en" style="font-size:1.7rem">${esc(word.en)}</div>${pron}`;
+      $('#listen-reveal').innerHTML = targetHTML;
     });
-  } else if (type === 'en2th') {
+  } else if (type === 'target2native') {
     lessonChrome(`
       <div class="q-card">
-        <div class="q-prompt">คำนี้แปลว่าอะไร? · What does this mean?</div>
-        <div class="q-word-en">${esc(word.en)}</div>
-        ${pron}
+        <div class="q-prompt">${bi('คำนี้แปลว่าอะไร?', 'What does this mean?')}</div>
+        ${targetHTML}
         <button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button>
       </div>
       <div class="choices">
         ${q.choices.map((c, i) => `
-          <button class="choice-btn" data-i="${i}">${esc(noParen(c.th))}</button>`).join('')}
+          <button class="choice-btn" data-i="${i}">${nativeChoice(c)}</button>`).join('')}
       </div>`);
-    Speech.say(word.en);
+    sayTarget(word.en, word.th);
   } else {
+    // native2target: your own language + the picture, produce the other one
     lessonChrome(`
       <div class="q-card">
-        <div class="q-prompt">ภาษาอังกฤษพูดว่าอย่างไร? · How do you say it in English?</div>
+        <div class="q-prompt">${farang
+          ? `How do you say it in Thai?<span class="en-line">พูดเป็นภาษาไทยว่าอย่างไร?</span>`
+          : `ภาษาอังกฤษพูดว่าอย่างไร?<span class="en-line">How do you say it in English?</span>`}</div>
         <span class="q-emoji">${word.emoji}</span>
-        <div class="q-word-th">${esc(word.th)}</div>
+        ${farang
+          ? `<div class="q-word-en" style="font-size:1.8rem">${esc(word.en)}</div>`
+          : `<div class="q-word-th">${esc(word.th)}</div>`}
         <div><button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button></div>
       </div>
       <div class="choices">
         ${q.choices.map((c, i) => `
-          <button class="choice-btn" data-i="${i}"><span class="c-en">${esc(c.en)}</span></button>`).join('')}
+          <button class="choice-btn" data-i="${i}">${targetChoice(c)}</button>`).join('')}
       </div>`);
-    Speech.sayThai(noParen(word.th).split('/')[0].trim());
+    if (farang) Speech.say(word.en); else Speech.sayThai(cleanTh(word.th));
   }
 
-  const speakQuestion = type === 'th2en'
-    ? () => Speech.sayThai(noParen(word.th).split('/')[0].trim())
-    : () => Speech.say(word.en);
+  // the replay button repeats whatever the question said first
+  const speaksNative = type === 'native2target';
+  const speakQuestion = () => {
+    if (speaksNative) { if (farang) Speech.say(word.en); else Speech.sayThai(cleanTh(word.th)); }
+    else sayTarget(word.en, word.th);
+  };
   $('#speak-btn')?.addEventListener('click', speakQuestion);
   $$('.choice-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -652,6 +720,7 @@ function renderQuestion() {
 function renderSentenceQuestion(q) {
   const s = q.sentence;
   const en2th = q.dir === 'en2th';
+  const farang = learningThai();
   const tiles = en2th
     ? shuffle([...s.thTiles, ...s.thExtra])
     : shuffle([...s.en.split(' '), ...s.extra]);
@@ -661,22 +730,31 @@ function renderSentenceQuestion(q) {
     ? () => Speech.say(s.en)
     : () => Speech.sayThai(s.th);
 
+  // farang learners can't read Thai script: Thai tiles carry their
+  // romanization on top, and a Thai prompt gets a romanized line under it
+  const tileHTML = (t) => (en2th && farang
+    ? `<span class="t-rom">${esc(rom(t) || t)}</span><span class="t-th">${esc(t)}</span>`
+    : esc(t));
+  const promptRomHTML = (!en2th && farang && s.thTiles)
+    ? `<div class="q-rom">${esc(s.thTiles.map((t) => rom(t) || t).join(' '))}</div>`
+    : '';
+
   lessonChrome(`
     <div class="q-card">
       <div class="q-prompt">${en2th
-        ? 'เรียงคำเป็นภาษาไทย · Build it in Thai'
-        : 'เรียงคำเป็นประโยคภาษาอังกฤษ · Build it in English'}</div>
+        ? bi('เรียงคำเป็นภาษาไทย', 'Build it in Thai')
+        : bi('เรียงคำเป็นประโยคภาษาอังกฤษ', 'Build it in English')}</div>
       ${en2th
         ? `<div class="q-word-en" style="font-size:1.6rem">${esc(s.en)}</div>`
-        : `<div class="q-word-th" style="font-size:1.4rem">${esc(s.th)}</div>`}
+        : `<div class="q-word-th" style="font-size:1.4rem">${esc(s.th)}</div>${promptRomHTML}`}
       <div><button class="speak-btn" id="speak-btn" aria-label="ฟังเสียง listen">🔊</button></div>
     </div>
     <div class="tile-answer" id="tile-answer"></div>
     <div class="tile-bank" id="tile-bank">
-      ${tiles.map((t, i) => `<button class="tile ${en2th ? 'th-tile' : ''}" data-i="${i}">${esc(t)}</button>`).join('')}
+      ${tiles.map((t, i) => `<button class="tile ${en2th ? 'th-tile' : ''} ${en2th && farang ? 'rom-tile' : ''}" data-i="${i}">${tileHTML(t)}</button>`).join('')}
     </div>
     <div style="margin-top:22px">
-      <button class="btn btn-mint btn-big" id="check-btn" disabled>ตรวจคำตอบ ✓<span class="en-line">Check</span></button>
+      <button class="btn btn-mint btn-big" id="check-btn" disabled>${bi('ตรวจคำตอบ ✓', 'Check ✓')}</button>
     </div>`);
 
   speakPrompt();
@@ -695,8 +773,8 @@ function renderSentenceQuestion(q) {
       q.answer.push(i);
       tile.classList.add('ghost-slot');
       const t = document.createElement('button');
-      t.className = `tile in-answer ${en2th ? 'th-tile' : ''}`;
-      t.textContent = q.tiles[i];
+      t.className = `tile in-answer ${en2th ? 'th-tile' : ''} ${en2th && farang ? 'rom-tile' : ''}`;
+      t.innerHTML = tileHTML(q.tiles[i]);
       t.dataset.i = i;
       t.addEventListener('click', () => {
         Sfx.pop();
@@ -717,7 +795,7 @@ function renderSentenceQuestion(q) {
     const correct = built.toLowerCase() === target.toLowerCase();
     checkBtn.disabled = true;
     $$('.tile').forEach((b) => { b.disabled = true; });
-    Speech.say(s.en);
+    sayTarget(s.en, s.th);
     answerSentence(q, correct);
   });
 }
@@ -827,7 +905,8 @@ function answerWord(q, correct) {
     Sfx.wrong();
   }
   save();
-  if (q.type === 'th2en' || q.type === 'listen' || q.type === 'speak') Speech.say(q.word.en);
+  // repeat the word in the learning language, unless it was just the prompt
+  if (q.type !== 'target2native') sayTarget(q.word.en, q.word.th);
   showFeedback(correct, q.word);
 }
 
@@ -835,7 +914,10 @@ function answerSentence(q, correct) {
   if (correct) { session.correct += 1; Sfx.correct(); }
   else Sfx.wrong();
   save();
-  showFeedback(correct, { en: q.sentence.en, th: q.sentence.th, pron: '' });
+  showFeedback(correct, {
+    en: q.sentence.en, th: q.sentence.th, pron: '',
+    rom: (q.sentence.thTiles || []).map((t) => rom(t) || t).join(' '),
+  });
 }
 
 const PRAISE = [
@@ -852,19 +934,22 @@ const CHEER_UP = [
 
 function showFeedback(correct, item) {
   const bar = $('#feedback-bar');
-  const [th, en] = correct ? pick(PRAISE) : pick(CHEER_UP);
-  const answerLine = `<div class="fb-answer"><span class="fb-en">${esc(item.en)}</span> = ${esc(item.th)}${item.pron ? ` · 🗣️ ${item.pron}` : ''}</div>`;
+  const [thMsg, enMsg] = correct ? pick(PRAISE) : pick(CHEER_UP);
+  // pronunciation help matches the learner: Thai-script pron of the English
+  // for her, romanization of the Thai for a farang
+  const hint = learningThai() ? (item.rom || rom(item.th)) : item.pron;
+  const answerLine = `<div class="fb-answer"><span class="fb-en">${esc(item.en)}</span> = ${esc(item.th)}${hint ? ` · 🗣️ ${esc(noParen(hint))}` : ''}</div>`;
   if (!correct) $('.q-card')?.classList.add('q-wrong');
   bar.className = `feedback-bar ${correct ? 'good' : 'bad'}`;
   bar.innerHTML = `
     <div class="feedback-inner">
       <div class="feedback-mascot">${mascotSVG({ mood: correct ? 'cheer' : 'oops', size: 62 })}</div>
-      <div class="feedback-msg">${correct ? '💚' : '💪'} ${th}<span class="en-line">${en}</span>${answerLine}</div>
+      <div class="feedback-msg">${correct ? '💚' : '💪'} ${bi(thMsg, enMsg)}${answerLine}</div>
       <button class="icon-btn" id="fb-speak" aria-label="ฟังอีกครั้ง listen again">🔊</button>
-      <button class="btn ${correct ? 'btn-mint' : ''}" id="next-btn">ต่อไป<span class="en-line">Next</span></button>
+      <button class="btn ${correct ? 'btn-mint' : ''}" id="next-btn">${bi('ต่อไป', 'Next')}</button>
     </div>`;
   requestAnimationFrame(() => bar.classList.add('show'));
-  $('#fb-speak').addEventListener('click', () => Speech.say(item.en));
+  $('#fb-speak').addEventListener('click', () => sayTarget(item.en, item.th));
   $('.progress-fill').style.width = ((session.index + 1) / session.questions.length) * 100 + '%';
   const scoreChip = $('.chip-score');
   if (scoreChip) scoreChip.textContent = `✓ ${session.correct}`;
@@ -902,20 +987,21 @@ function renderResults() {
   const mood = passed ? 'party' : 'happy';
   const titleTh = pct === 1 ? 'เพอร์เฟค! 💯' : passed ? 'เยี่ยมมาก!' : 'เกือบแล้ว! ลองอีกครั้งนะ';
   const titleEn = pct === 1 ? 'Perfect score!' : passed ? 'Great job!' : 'Almost! Try once more';
+  const lbl = (th, en) => (learningThai() ? `${en}<br>${th}` : `${th}<br>${en}`);
 
   appEl.innerHTML = `
   <div class="screen results-wrap">
     ${mascotSVG({ mood, size: 160 })}
-    <div class="results-title">${titleTh}<span class="en-line">${titleEn}</span></div>
+    <div class="results-title">${bi(titleTh, titleEn)}</div>
     <div class="results-stats">
-      <div class="stat-box"><div class="stat-num">${session.correct}/${total}</div><div class="stat-lbl">ตอบถูก<br>correct</div></div>
-      ${newMastered > 0 ? `<div class="stat-box"><div class="stat-num">+${newMastered}</div><div class="stat-lbl">คำที่จำได้แล้ว<br>words mastered</div></div>` : ''}
-      <div class="stat-box"><div class="stat-num">🔥 ${streakCurrent()}</div><div class="stat-lbl">วันติดต่อกัน<br>day streak</div></div>
+      <div class="stat-box"><div class="stat-num">${session.correct}/${total}</div><div class="stat-lbl">${lbl('ตอบถูก', 'correct')}</div></div>
+      ${newMastered > 0 ? `<div class="stat-box"><div class="stat-num">+${newMastered}</div><div class="stat-lbl">${lbl('คำที่จำได้แล้ว', 'words mastered')}</div></div>` : ''}
+      <div class="stat-box"><div class="stat-num">🔥 ${streakCurrent()}</div><div class="stat-lbl">${lbl('วันติดต่อกัน', 'day streak')}</div></div>
     </div>
     <div class="results-actions">
       ${!passed ? `
-      <button class="btn btn-big" id="again-btn">ลองอีกครั้ง 💪<span class="en-line">Try again</span></button>` : ''}
-      <button class="btn ${passed ? 'btn-big' : 'btn-ghost btn-big'}" id="home-btn">กลับหน้าหลัก 🏠<span class="en-line">Home</span></button>
+      <button class="btn btn-big" id="again-btn">${bi('ลองอีกครั้ง 💪', 'Try again 💪')}</button>` : ''}
+      <button class="btn ${passed ? 'btn-big' : 'btn-ghost btn-big'}" id="home-btn">${bi('กลับหน้าหลัก 🏠', 'Home 🏠')}</button>
     </div>
   </div>`;
 
@@ -938,10 +1024,14 @@ function openSettings() {
   <div class="sheet">
     <h3>ตั้งค่า ⚙️<span class="en-line">Settings</span></h3>
     <div class="sheet-row">
-      <span>ชื่อ<span class="en-line">Name</span></span>
+      <span>${bi('ชื่อ', 'Name')}</span>
       <input class="name-input grow" id="set-name" value="${esc(state.name)}" maxlength="20" style="padding:8px 12px;font-size:1rem" />
     </div>
-    <button class="btn btn-big" id="set-done">เสร็จแล้ว ✓<span class="en-line">Done</span></button>
+    <div class="sheet-row">
+      <span class="grow">${bi('กำลังเรียน', 'Learning')}</span>
+      <button class="btn" id="set-lang">${learningThai() ? '🇹🇭 Thai' : '🇬🇧 English'}</button>
+    </div>
+    <button class="btn btn-big" id="set-done">${bi('เสร็จแล้ว ✓', 'Done ✓')}</button>
     <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
   </div>`;
   document.body.appendChild(backdrop);
@@ -954,6 +1044,11 @@ function openSettings() {
     backdrop.remove();
     renderHome();
   };
+  $('#set-lang', backdrop).addEventListener('click', (e) => {
+    state.lang = learningThai() ? 'en' : 'th';
+    save();
+    e.target.textContent = learningThai() ? '🇹🇭 Thai' : '🇬🇧 English';
+  });
   $('#set-done', backdrop).addEventListener('click', close);
   $('#set-reset', backdrop).addEventListener('click', () => {
     if (confirm('แน่ใจไหม? โปรไฟล์นี้และความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? This profile and all its progress will be deleted.')) {

@@ -481,6 +481,32 @@ body::before {
 .mic-hint { font-weight: 700; color: var(--ink-soft); text-align: center; }
 .mic-out { min-height: 1.4em; font-family: var(--font-en); font-weight: 700; color: var(--ink); }
 .self-judge { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* ── learn Thai (farang) mode ────────────────────────────── */
+.lang-choice { display: flex; gap: 10px; justify-content: center; margin: 8px 0 14px; }
+.lang-btn {
+  flex: 1; max-width: 200px;
+  background: var(--paper);
+  border: 3px solid #eee1d4;
+  border-radius: 16px;
+  padding: 10px 12px;
+  font-family: inherit; font-weight: 700; font-size: 1rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.lang-btn.selected { border-color: var(--mint-deep); background: var(--mint-soft); }
+.lang-btn:active { transform: scale(0.95); }
+.p-lang { font-size: 0.85em; }
+/* Thai answer choices for farangs: romanization big, Thai script small */
+.c-rom { display: block; font-family: var(--font-en); font-weight: 700; }
+.c-th { display: block; font-size: 0.8em; color: var(--ink-soft); }
+/* Thai sentence tiles for farangs: same idea */
+.tile.rom-tile { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.15; }
+.tile .t-rom { font-family: var(--font-en); font-weight: 700; }
+.tile .t-th { font-size: 0.72em; color: var(--ink-soft); }
+/* romanized line under a Thai sentence prompt */
+.q-rom { font-family: var(--font-en); font-weight: 700; color: var(--ink-soft); margin-top: 6px; font-size: 1.05rem; }
 .speak-btn.speaking { animation: pulse-speak 0.9s ease-in-out infinite; }
 @keyframes pulse-speak {
   0%, 100% { box-shadow: 0 0 0 0 rgba(111, 181, 240, 0.5); }

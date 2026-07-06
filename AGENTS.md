@@ -4,10 +4,20 @@ Everything an agent (or human) must know before changing this project.
 
 ## What this is
 
-A web app that teaches **English to a Thai speaker who knows almost no English**
-(the owner's girlfriend — she uses it daily on her phone/tablet). The owner reads
-English; she reads Thai. It is deliberately simple: no login, no backend, no build
-step, no framework. All progress lives in localStorage.
+A web app with **two learning modes, chosen per profile**:
+
+- **Learn English** (`state.lang === 'en'`, the original): teaches English to
+  a Thai speaker who knows almost no English (the owner's girlfriend — she
+  uses it daily on her phone/tablet).
+- **Learn Thai** (`state.lang === 'th'`, "farang mode"): the same content
+  reversed, for English speakers (the owner and friends). Farang learners
+  don't read Thai script, so every Thai string is accompanied by its
+  tone-marked romanization from `data/romanize.js` (`TH_ROM`), and there are
+  **no speaking questions** in this mode.
+
+It is deliberately simple: no login, no backend, no build step, no framework.
+All progress lives in localStorage. The `bi(th, en)` helper renders all UI
+copy learner's-language-first; `learningThai()` is the mode switch.
 
 - **Live site**: https://fvjohnny.github.io/learn-passa-angrit/
 - **Hosting**: GitHub Pages, legacy build from `main` branch root. Pushing to
@@ -49,6 +59,8 @@ refresh button — receive updates.
 | `js/audio.js` | `Speech` (speechSynthesis, en-US) + `Recog` (SpeechRecognition wrapper) + `Sfx` (WebAudio tones) |
 | `data/words.js` | `WORD_PACKS` — Level 1 vocabulary (34 packs, ~650 words) |
 | `data/sentences.js` | `SENTENCE_PACKS` — Level 2 sentence building + `SENTENCE_PACKS_L3` (20 packs, 200 sentences, both directions) |
+| `data/romanize.js` | `TH_ROM` — tone-marked romanization of every Thai string (words, tiles, distractors) for farang mode. **Adding any Thai content requires adding its romanization here** — `node check.js` enforces coverage |
+| `check.js` | data integrity checker (`node check.js`): pack rules, tile joins, distractor ambiguity, TH_ROM coverage |
 
 ## Product rules (learned from the owner — do not regress)
 
@@ -102,24 +114,29 @@ Sentence packs (`data/sentences.js`):
 - A session asks **all not-yet-mastered words** of the pack, shuffled. Every
   answer is saved immediately, so quitting mid-session keeps progress. A
   fully-mastered pack replays all of its words.
-- Every word question is an even four-way random pick, from the first
-  encounter: en→th (English shown and spoken, pick the Thai), th→en (Thai
-  shown and spoken with the Thai voice, pick the English), **listening**
-  (English audio only — no text, no pron hint, no emoji, all would leak the
-  answer — pick the Thai; a dashed "ขอดูคำศัพท์หน่อย" helper button reveals
-  the written word + pron), or **speaking** (see below). Sentence questions
-  mix the same way: build the English from a Thai prompt, build the Thai
-  from an English prompt, or speak the English (25%). The correct answer is
-  spoken in English after answering.
-- **Speaking questions** (words and sentences share `renderSpeakQuestion`):
-  Thai prompt shown and spoken, she says the English out loud. A helper pill
-  reveals + speaks the answer, turning it into "repeat after me". With
-  SpeechRecognition available (`Recog` in `js/audio.js`), the transcript is
-  matched generously (fuzzy Levenshtein, target-anywhere-in-transcript, 70%
-  word overlap for sentences; helpers unit-testable in node) with 2 tries.
-  Without it — **iOS home-screen apps have no SpeechRecognition** — it
-  degrades to say-it-aloud with honest self-grading buttons. `ensureSpeak()`
-  guarantees at least one speaking question per session.
+- Word question types are mode-agnostic (**target** = language being
+  learned, **native** = the learner's own): `target2native` (read the
+  target word + pron/rom hint, pick the native meaning), `native2target`
+  (read your own language + the emoji, pick the target word), `listen`
+  (target audio only — no text, no hint, no emoji, all would leak the
+  answer — a dashed helper button reveals the written word), and `speak`.
+  Learn-English mixes all four evenly; learn-Thai mixes the first three
+  evenly (no speaking). The **emoji rule follows the mode**: never show the
+  word's emoji when the answer choices are in the learner's own language.
+  In farang mode Thai choices/tiles render romanization big with Thai
+  script small. Sentence questions mix the same way (speak only for
+  English learners). The correct answer is spoken in the target language
+  after answering.
+- **Speaking questions** (English learners only; words and sentences share
+  `renderSpeakQuestion`): Thai prompt shown and spoken, she says the English
+  out loud. A helper pill reveals + speaks the answer, turning it into
+  "repeat after me". With SpeechRecognition available (`Recog` in
+  `js/audio.js`), the transcript is matched generously (fuzzy Levenshtein,
+  target-anywhere-in-transcript, 70% word overlap for sentences; helpers
+  unit-testable in node) with 2 tries. Without it — **iOS home-screen apps
+  have no SpeechRecognition** — it degrades to say-it-aloud with honest
+  self-grading buttons. `ensureSpeak()` guarantees at least one speaking
+  question per learn-English session.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
 - A sentence pack is **passed** once a session ends with a score ≥80%
@@ -151,8 +168,9 @@ Sentence packs (`data/sentences.js`):
   for testing on a real phone. Test locally BEFORE pushing to main — every push
   deploys to the live site the owner's girlfriend uses daily.
 - Syntax check: `node --check js/*.js data/*.js`.
-- Data integrity (dup emojis/ids, distractor ambiguity) — there's no committed
-  test script; validate manually or eval the data files in node.
+- Data integrity: `node check.js` — pack rules, duplicate emojis/ids, tile
+  joins, distractor ambiguity, and TH_ROM romanization coverage. Run it
+  after ANY change to `data/`.
 - **Headless Chrome quirks**: the infinite background CSS animations stall
   `--virtual-time-budget` (hangs), and screenshots crop the right edge even
   though the layout is fine. Trust in-page measurements over screenshots.
