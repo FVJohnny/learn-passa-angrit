@@ -336,12 +336,12 @@ function renderHome() {
   appEl.innerHTML = `
   <div class="screen">
     <div class="topbar">
-      <div class="brand"><span class="logo-emoji">🍌</span> กล้วยน้อย</div>
+      <button class="icon-btn back-btn" id="profile-btn" aria-label="เปลี่ยนโปรไฟล์ switch profile">←</button>
+      <div class="brand">${esc(state.avatar || '🍌')} ${esc(state.name)}</div>
       <div class="stat-chips">
         <div class="chip chip-fire ${streak > 0 ? 'lit' : ''}" title="เรียนติดต่อกัน">
           🔥 ${streak} <span class="chip-sub">วัน<br>days</span>
         </div>
-        <button class="icon-btn" id="profile-btn" aria-label="เปลี่ยนโปรไฟล์ switch profile">${esc(state.avatar || '👥')}</button>
         <button class="icon-btn" id="unlock-btn" aria-label="ปลดล็อคทุกแพ็ค unlock all">${state.unlockAll ? '🔓' : '🔐'}</button>
         <button class="icon-btn" id="settings-btn" aria-label="ตั้งค่า settings">⚙️</button>
       </div>
