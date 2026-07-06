@@ -118,7 +118,7 @@ Sentence packs (`data/sentences.js`):
   `defaultState()`, including `name` and an emoji `avatar`). `toRoot()`
   migrates legacy single-profile blobs. Opening the app shows the profile
   picker; the avatar button on home switches profiles; settings reset deletes
-  only the current profile; backup/restore codes carry one profile.
+  only the current profile.
 - The root is double-written to localStorage AND IndexedDB
   (`gluaynoi-db`/kv/state) with a `rev` counter — iOS home-screen apps can lose
   un-flushed localStorage on force-quit, so boot recovers from whichever copy

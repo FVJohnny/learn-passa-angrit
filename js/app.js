@@ -750,14 +750,6 @@ function openSettings() {
       <span class="grow">คำอ่านภาษาไทย 🗣️<span class="en-line">Thai pronunciation hints</span></span>
       <button class="toggle ${state.pron ? 'on' : ''}" id="set-pron" aria-label="toggle pronunciation"></button>
     </div>
-    <div class="sheet-row">
-      <span class="grow">สำรองความคืบหน้า 📦<span class="en-line">Backup progress (copy code)</span></span>
-      <button class="btn" id="set-export" style="padding:8px 16px;font-size:0.95rem">คัดลอก<span class="en-line">Copy</span></button>
-    </div>
-    <div class="sheet-row">
-      <span class="grow">กู้คืนความคืบหน้า 📥<span class="en-line">Restore progress (paste code)</span></span>
-      <button class="btn btn-blue" id="set-import" style="padding:8px 16px;font-size:0.95rem">วางโค้ด<span class="en-line">Paste</span></button>
-    </div>
     <button class="btn btn-big" id="set-done">เสร็จแล้ว ✓<span class="en-line">Done</span></button>
     <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
   </div>`;
@@ -775,31 +767,6 @@ function openSettings() {
     state.pron = !state.pron;
     e.target.classList.toggle('on', state.pron);
     save();
-  });
-  $('#set-export', backdrop).addEventListener('click', async () => {
-    const code = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-    try {
-      await navigator.clipboard.writeText(code);
-      toast('📦', 'คัดลอกโค้ดแล้ว! เอาไปวางในอีกเครื่องได้เลย', 'Code copied — paste it on the other device');
-    } catch (e) {
-      prompt('คัดลอกโค้ดนี้ · Copy this code:', code);
-    }
-  });
-  $('#set-import', backdrop).addEventListener('click', () => {
-    const code = prompt('วางโค้ดความคืบหน้าที่นี่ · Paste your progress code:');
-    if (!code) return;
-    try {
-      const data = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-      if (!data || typeof data.words !== 'object') throw new Error('bad code');
-      state = Object.assign(defaultState(), data);
-      root.profiles[root.current] = state;
-      save();
-      backdrop.remove();
-      toast('🎉', 'กู้คืนความคืบหน้าแล้ว!', 'Progress restored!');
-      renderHome();
-    } catch (e) {
-      toast('😵', 'โค้ดไม่ถูกต้อง ลองคัดลอกใหม่อีกครั้งนะ', "That code isn't valid — copy it again");
-    }
   });
   $('#set-done', backdrop).addEventListener('click', close);
   $('#set-reset', backdrop).addEventListener('click', () => {
