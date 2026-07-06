@@ -847,7 +847,9 @@ function maybeApplyUpdate() {
 
 async function checkForUpdate() {
   try {
-    const res = await fetch('index.html', { cache: 'no-store' });
+    // the unique query busts the GitHub Pages CDN cache (max-age=600), not
+    // just the browser cache — so updates reach devices ~1 min after deploy
+    const res = await fetch('index.html?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const html = await res.text();
     const m = html.match(/js\/app\.js\?v=(\d+)/);

@@ -33,8 +33,10 @@ The version number also powers auto-updates: the app compares its own
 `js/app.js?v=N` against a freshly fetched `index.html` (on launch and whenever
 it returns to the foreground) and silently reloads itself when the server has a
 higher `N` — never mid-lesson, only on the home screen, at most one attempt per
-version per session. This is how users inside home-screen web apps — which have
-no refresh button — receive updates.
+version per session. The check fetches `index.html?t=<now>` — the unique query
+busts the Pages CDN cache too, so a deploy reaches devices in ~1 minute instead
+of up to 10. This is how users inside home-screen web apps — which have no
+refresh button — receive updates.
 
 ## File map
 
