@@ -104,6 +104,25 @@ const Sfx = {
     this.tone(520, 0, 0.08, { type: 'triangle', gain: 0.1 });
   },
 
+  // springy pitch-slide for poking the mascot
+  boing() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(720, t + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(420, t + 0.26);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.22, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.42);
+  },
+
   fanfare() {
     const notes = [523, 659, 784, 1047];
     notes.forEach((f, i) => this.tone(f, i * 0.12, 0.3, { type: 'triangle' }));

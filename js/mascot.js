@@ -1,6 +1,6 @@
 // น้องกล้วย — the baby banana mascot, drawn as inline SVG.
 // mascotSVG({ mood, size })
-// moods: normal | happy | cheer | oops | sleep | party
+// moods: normal | happy | cheer | oops | surprised | sleep | party
 
 const BANANA = {
   body: '#FFE066',
@@ -32,6 +32,14 @@ function mascotSVG(opts = {}) {
       <circle cx="120" cy="90" r="5.5" fill="#6B4F3A"/>
       <path d="M70 78 q10 -6 20 -2" stroke="#6B4F3A" stroke-width="3" fill="none" stroke-linecap="round"/>
       <path d="M130 78 q-10 -6 -20 -2" stroke="#6B4F3A" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  } else if (mood === 'surprised') {
+    eyes = `
+      <circle cx="80" cy="88" r="8" fill="#6B4F3A"/>
+      <circle cx="120" cy="88" r="8" fill="#6B4F3A"/>
+      <circle cx="83" cy="85" r="2.8" fill="#fff"/>
+      <circle cx="123" cy="85" r="2.8" fill="#fff"/>
+      <path d="M68 72 q11 -9 22 -5" stroke="#6B4F3A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M132 72 q-11 -9 -22 -5" stroke="#6B4F3A" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
   } else {
     eyes = `
       <circle cx="80" cy="89" r="6" fill="#6B4F3A"/>
@@ -46,6 +54,8 @@ function mascotSVG(opts = {}) {
     mouth = `<path d="M89 104 q11 12 22 0 q-4 12 -11 12 q-7 0 -11 -12z" fill="#A9713F"/>`;
   } else if (mood === 'oops') {
     mouth = `<ellipse cx="100" cy="108" rx="6" ry="7" fill="#A9713F"/>`;
+  } else if (mood === 'surprised') {
+    mouth = `<ellipse cx="100" cy="111" rx="8.5" ry="10" fill="#A9713F"/>`;
   } else if (mood === 'sleep') {
     mouth = `<path d="M93 107 q7 5 14 0" stroke="#A9713F" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
   } else {
@@ -53,7 +63,7 @@ function mascotSVG(opts = {}) {
   }
 
   // ── stubby arms: up in the air when cheering ──
-  const arms = (mood === 'cheer' || mood === 'party')
+  const arms = (mood === 'cheer' || mood === 'party' || mood === 'surprised')
     ? `<ellipse cx="48" cy="106" rx="10" ry="16" fill="${c.mid}" transform="rotate(38 48 106)"/>
        <ellipse cx="152" cy="106" rx="10" ry="16" fill="${c.mid}" transform="rotate(-38 152 106)"/>`
     : `<ellipse cx="58" cy="138" rx="10" ry="15" fill="${c.mid}" transform="rotate(16 58 138)"/>
@@ -65,6 +75,9 @@ function mascotSVG(opts = {}) {
       <text class="m-zzz z2" x="150" y="42" font-size="15">z</text>
       <text class="m-zzz z3" x="158" y="34" font-size="11">z</text>
     </g>` : '';
+
+  const bang = mood === 'surprised' ? `
+    <text x="146" y="50" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="32" fill="#F87DA0">!</text>` : '';
 
   const partyBits = mood === 'party' ? `
     <g>
@@ -100,6 +113,7 @@ function mascotSVG(opts = {}) {
     ${eyes}
     ${mouth}
     ${zzz}
+    ${bang}
     ${partyBits}
   </svg>`;
 }

@@ -401,6 +401,18 @@ function renderHome() {
 
   $('#settings-btn').addEventListener('click', openSettings);
   $('#profile-btn').addEventListener('click', () => { Sfx.pop(); renderProfiles(); });
+  // poke the banana → it jumps, startled, then calms down again
+  const holder = $('.mascot-holder');
+  holder.addEventListener('click', () => {
+    if (holder.classList.contains('poked')) return;
+    Sfx.boing();
+    holder.classList.add('poked');
+    holder.innerHTML = mascotSVG({ mood: 'surprised', size: 130 });
+    setTimeout(() => {
+      holder.classList.remove('poked');
+      holder.innerHTML = mascotSVG({ mood: g.mood, size: 130 });
+    }, 1000);
+  });
   refreshVersionTag();
   $('#unlock-btn').addEventListener('click', () => {
     if (state.unlockAll) {

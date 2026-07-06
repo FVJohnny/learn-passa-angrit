@@ -168,7 +168,16 @@ body::before {
   position: relative;
   overflow: hidden;
 }
-.mascot-card .mascot-holder { flex-shrink: 0; }
+.mascot-card .mascot-holder { flex-shrink: 0; cursor: pointer; transform-origin: 50% 100%; }
+.mascot-card .mascot-holder.poked { animation: poke-squish 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes poke-squish {
+  0% { transform: scale(1); }
+  15% { transform: scaleX(1.18) scaleY(0.78); }
+  40% { transform: scaleX(0.9) scaleY(1.14) translateY(-10px); }
+  62% { transform: scaleX(1.06) scaleY(0.94); }
+  80% { transform: scaleX(0.98) scaleY(1.03); }
+  100% { transform: scale(1); }
+}
 .speech-bubble {
   background: #fff;
   border-radius: 18px;
