@@ -1061,7 +1061,9 @@ function openSettings() {
         <button class="btn grow" id="set-import">📥 ${bi('นำเข้า', 'Import')}</button>
       </div>
       <button class="btn btn-big" id="set-done">${bi('เสร็จแล้ว ✓', 'Done ✓')}</button>
-      <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
+      <button class="danger-link" id="set-reset">🗑️ ${learningThai()
+        ? `Delete this profile · ลบโปรไฟล์นี้`
+        : `ลบโปรไฟล์นี้ · Delete this profile`}</button>
     </div>`;
     $('#set-lang', backdrop).addEventListener('click', (e) => {
       state.lang = learningThai() ? 'en' : 'th';
@@ -1072,7 +1074,7 @@ function openSettings() {
     $('#set-import', backdrop).addEventListener('click', () => { Sfx.pop(); renderImport(); });
     $('#set-done', backdrop).addEventListener('click', close);
     $('#set-reset', backdrop).addEventListener('click', () => {
-      if (confirm('แน่ใจไหม? โปรไฟล์นี้และความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? This profile and all its progress will be deleted.')) {
+      if (confirm(`ลบโปรไฟล์ “${state.name}” จริงๆ หรอ? ความคืบหน้าทั้งหมดจะหายไปนะ\nReally delete “${state.name}”? All progress will be gone forever.`)) {
         delete root.profiles[root.current];
         root.current = null;
         state = defaultState();
