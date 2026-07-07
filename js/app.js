@@ -1015,51 +1015,134 @@ function renderResults() {
 }
 
 // ═════════════════════════════════════════════════════════════
-// settings sheet
+// settings sheet (+ profile export/import)
 // ═════════════════════════════════════════════════════════════
+// progress codes move a profile between devices/browsers — crucial on iOS,
+// where the home-screen app and Safari have SEPARATE localStorage
+const encodeProfile = () =>
+  btoa(unescape(encodeURIComponent(JSON.stringify({ gluaynoi: 1, profile: state }))));
+
+function decodeProfile(code) {
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+    if (!data || data.gluaynoi !== 1 || !data.profile || typeof data.profile.words !== 'object') return null;
+    return Object.assign(defaultState(), data.profile);
+  } catch (e) { return null; }
+}
+
 function openSettings() {
   const backdrop = document.createElement('div');
   backdrop.className = 'sheet-backdrop';
-  backdrop.innerHTML = `
-  <div class="sheet">
-    <h3>ตั้งค่า ⚙️<span class="en-line">Settings</span></h3>
-    <div class="sheet-row">
-      <span>${bi('ชื่อ', 'Name')}</span>
-      <input class="name-input grow" id="set-name" value="${esc(state.name)}" maxlength="20" style="padding:8px 12px;font-size:1rem" />
-    </div>
-    <div class="sheet-row">
-      <span class="grow">${bi('กำลังเรียน', 'Learning')}</span>
-      <button class="btn" id="set-lang">${learningThai() ? '🇹🇭 Thai' : '🇬🇧 English'}</button>
-    </div>
-    <button class="btn btn-big" id="set-done">${bi('เสร็จแล้ว ✓', 'Done ✓')}</button>
-    <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
-  </div>`;
   document.body.appendChild(backdrop);
-
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+
   const close = () => {
-    const name = $('#set-name', backdrop).value.trim();
+    const name = $('#set-name', backdrop)?.value.trim();
     if (name) state.name = name;
     save();
     backdrop.remove();
     renderHome();
   };
-  $('#set-lang', backdrop).addEventListener('click', (e) => {
-    state.lang = learningThai() ? 'en' : 'th';
-    save();
-    e.target.textContent = learningThai() ? '🇹🇭 Thai' : '🇬🇧 English';
-  });
-  $('#set-done', backdrop).addEventListener('click', close);
-  $('#set-reset', backdrop).addEventListener('click', () => {
-    if (confirm('แน่ใจไหม? โปรไฟล์นี้และความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? This profile and all its progress will be deleted.')) {
-      delete root.profiles[root.current];
-      root.current = null;
-      state = defaultState();
+
+  const renderMain = () => {
+    backdrop.innerHTML = `
+    <div class="sheet">
+      <h3>${bi('ตั้งค่า ⚙️', 'Settings ⚙️')}</h3>
+      <div class="sheet-row">
+        <span>${bi('ชื่อ', 'Name')}</span>
+        <input class="name-input grow" id="set-name" value="${esc(state.name)}" maxlength="20" style="padding:8px 12px;font-size:1rem" />
+      </div>
+      <div class="sheet-row">
+        <span class="grow">${bi('กำลังเรียน', 'Learning')}</span>
+        <button class="btn" id="set-lang">${learningThai() ? '🇹🇭 Thai' : '🇬🇧 English'}</button>
+      </div>
+      <div class="sheet-row">
+        <button class="btn grow" id="set-export">📤 ${bi('ส่งออก', 'Export')}</button>
+        <button class="btn grow" id="set-import">📥 ${bi('นำเข้า', 'Import')}</button>
+      </div>
+      <button class="btn btn-big" id="set-done">${bi('เสร็จแล้ว ✓', 'Done ✓')}</button>
+      <button class="danger-link" id="set-reset">ลบข้อมูลทั้งหมด เริ่มใหม่ · Reset all progress</button>
+    </div>`;
+    $('#set-lang', backdrop).addEventListener('click', (e) => {
+      state.lang = learningThai() ? 'en' : 'th';
+      save();
+      e.target.textContent = learningThai() ? '🇹🇭 Thai' : '🇬🇧 English';
+    });
+    $('#set-export', backdrop).addEventListener('click', () => { Sfx.pop(); renderExport(); });
+    $('#set-import', backdrop).addEventListener('click', () => { Sfx.pop(); renderImport(); });
+    $('#set-done', backdrop).addEventListener('click', close);
+    $('#set-reset', backdrop).addEventListener('click', () => {
+      if (confirm('แน่ใจไหม? โปรไฟล์นี้และความคืบหน้าทั้งหมดจะหายไปนะ\nAre you sure? This profile and all its progress will be deleted.')) {
+        delete root.profiles[root.current];
+        root.current = null;
+        state = defaultState();
+        save();
+        backdrop.remove();
+        renderBoot();
+      }
+    });
+  };
+
+  const renderExport = () => {
+    const code = encodeProfile();
+    backdrop.innerHTML = `
+    <div class="sheet">
+      <h3>📤 ${bi('ส่งออกความคืบหน้า', 'Export progress')}</h3>
+      <p class="sheet-note">${bi(
+        'คัดลอกโค้ดนี้ แล้วไป “นำเข้า” ในแอปหรือเบราว์เซอร์อีกที่หนึ่ง',
+        'Copy this code, then use Import in the other app or browser')}</p>
+      <textarea class="code-box" id="export-code" readonly>${code}</textarea>
+      <button class="btn btn-mint btn-big" id="copy-code">${bi('คัดลอก 📋', 'Copy 📋')}</button>
+      ${navigator.share ? `<button class="btn btn-big" id="share-code">${bi('แชร์ 💬', 'Share 💬')}</button>` : ''}
+      <button class="btn btn-ghost" id="sheet-back">${bi('← กลับ', '← Back')}</button>
+    </div>`;
+    $('#copy-code', backdrop).addEventListener('click', async () => {
+      const ta = $('#export-code', backdrop);
+      try {
+        await navigator.clipboard.writeText(code);
+        toast('📋', 'คัดลอกแล้ว!', 'Copied!');
+      } catch (e) {
+        ta.select();
+        document.execCommand('copy');
+        toast('📋', 'คัดลอกแล้ว!', 'Copied!');
+      }
+    });
+    $('#share-code', backdrop)?.addEventListener('click', () => {
+      navigator.share({ text: code }).catch(() => {});
+    });
+    $('#sheet-back', backdrop).addEventListener('click', renderMain);
+  };
+
+  const renderImport = () => {
+    backdrop.innerHTML = `
+    <div class="sheet">
+      <h3>📥 ${bi('นำเข้าความคืบหน้า', 'Import progress')}</h3>
+      <p class="sheet-note">${bi(
+        'วางโค้ดจากเครื่องอื่นที่นี่ — โปรไฟล์นี้จะถูกแทนที่',
+        'Paste the code from your other device — it will REPLACE this profile')}</p>
+      <textarea class="code-box" id="import-code" placeholder="วางโค้ดที่นี่ · paste code here"></textarea>
+      <button class="btn btn-mint btn-big" id="do-import">${bi('นำเข้า ✓', 'Import ✓')}</button>
+      <button class="btn btn-ghost" id="sheet-back">${bi('← กลับ', '← Back')}</button>
+    </div>`;
+    $('#do-import', backdrop).addEventListener('click', () => {
+      const imported = decodeProfile($('#import-code', backdrop).value);
+      if (!imported) {
+        toast('❌', 'โค้ดไม่ถูกต้อง ลองคัดลอกใหม่นะ', "That code doesn't look right — copy it again");
+        return;
+      }
+      if (!confirm('แทนที่โปรไฟล์นี้ด้วยข้อมูลที่นำเข้า?\nReplace this profile with the imported progress?')) return;
+      root.profiles[root.current] = imported;
+      state = root.profiles[root.current];
       save();
       backdrop.remove();
-      renderBoot();
-    }
-  });
+      Sfx.fanfare();
+      toast('📥', `ยินดีต้อนรับกลับมา ${esc(state.name)}!`, `Welcome back, ${esc(state.name)}!`);
+      renderHome();
+    });
+    $('#sheet-back', backdrop).addEventListener('click', renderMain);
+  };
+
+  renderMain();
 }
 
 // ═════════════════════════════════════════════════════════════

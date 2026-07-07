@@ -157,6 +157,11 @@ Sentence packs (`data/sentences.js`):
   migrates legacy single-profile blobs. Opening the app shows the profile
   picker; the avatar button on home switches profiles; settings reset deletes
   only the current profile.
+- **Export/Import in settings** moves one profile between devices as a
+  base64 code (`{ gluaynoi: 1, profile }`, unicode-safe via
+  encodeURIComponent) — needed because the iOS home-screen app and Safari
+  have separate localStorage. Import REPLACES the current profile after a
+  confirm.
 - The root is double-written to localStorage AND IndexedDB
   (`gluaynoi-db`/kv/state) with a `rev` counter — iOS home-screen apps can lose
   un-flushed localStorage on force-quit, so boot recovers from whichever copy
