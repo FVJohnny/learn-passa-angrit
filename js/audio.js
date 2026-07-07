@@ -64,8 +64,15 @@ const Speech = {
 const Recog = {
   SR: window.SpeechRecognition || window.webkitSpeechRecognition || null,
   active: null,
+  // iOS home-screen apps EXPOSE the API but its service always refuses —
+  // navigator.standalone catches that upfront so no mic UI is shown there.
+  // `broken` remembers a hard runtime failure; the service-not-allowed case
+  // persists across launches ('gluaynoi-no-mic') since it never recovers.
+  broken: (() => {
+    try { return localStorage.getItem('gluaynoi-no-mic') === '1'; } catch (e) { return false; }
+  })(),
 
-  get available() { return !!this.SR; },
+  get available() { return !!this.SR && !navigator.standalone && !this.broken; },
 
   // listen once; resolves with an array of candidate transcripts
   // (lowercased), [] when nothing was heard, or null when the mic is
@@ -90,7 +97,13 @@ const Recog = {
       };
       r.onerror = (e) => {
         this.active = null;
-        resolve(e.error === 'no-speech' || e.error === 'aborted' ? [] : null);
+        if (e.error === 'no-speech' || e.error === 'aborted') return resolve([]);
+        // hard failure: stop offering the mic (this device/session)
+        this.broken = true;
+        if (e.error === 'service-not-allowed') {
+          try { localStorage.setItem('gluaynoi-no-mic', '1'); } catch (err) {}
+        }
+        resolve(null);
       };
       r.onend = () => { this.active = null; resolve(finals); };
       try { r.start(); } catch (err) { this.active = null; resolve(null); }

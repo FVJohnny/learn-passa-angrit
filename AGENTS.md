@@ -134,8 +134,10 @@ Sentence packs (`data/sentences.js`):
   `js/audio.js`), the transcript is matched generously (fuzzy Levenshtein,
   target-anywhere-in-transcript, 70% word overlap for sentences; helpers
   unit-testable in node) with 2 tries. Without it — **iOS home-screen apps
-  have no SpeechRecognition** — it degrades to say-it-aloud with honest
-  self-grading buttons. `ensureSpeak()` guarantees at least one speaking
+  expose the API but the service always refuses**, so `Recog.available`
+  checks `navigator.standalone` upfront and remembers hard runtime failures
+  (`gluaynoi-no-mic` in localStorage) — it degrades to say-it-aloud with
+  honest self-grading buttons and no mic UI. `ensureSpeak()` guarantees at least one speaking
   question per learn-English session.
 - A pack unlocks when the **previous pack is fully mastered**.
 - **Level 2 unlocks at 80 total mastered words** (`LEVEL2_WORDS`).
